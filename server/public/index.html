@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oracle69 AgentPay — PayPal Sandbox + Monad Testnet Demo</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+  .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid currentColor; font-size: 0.85rem; }
+  .warn { border: 2px solid currentColor; padding: 0.75rem 1rem; border-radius: 8px; margin: 1rem 0; }
+  .sim { border: 2px dashed #b45309; color: #b45309; padding: 0.5rem 0.75rem; border-radius: 8px; margin: 0.75rem 0; font-weight: 700; }
+  label { display: block; margin-top: 0.75rem; font-weight: 600; }
+  input, textarea, button { width: 100%; box-sizing: border-box; padding: 0.5rem; margin-top: 0.25rem; font: inherit; }
+  textarea { min-height: 5rem; font-family: monospace; }
+  button { cursor: pointer; margin-top: 1rem; }
+  button:disabled { cursor: not-allowed; opacity: 0.6; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid currentColor; border-radius: 8px; padding: 1rem; }
+  .ok { font-weight: 700; }
+  .error { color: #b91c1c; font-weight: 700; }
+  .step-badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; margin: 0 0.2rem 0.3rem 0; background: #e2e8f0; color: #0f172a; }
+  .step-active { background: #3b82f6; color: white; }
+  .muted { color: #64748b; font-size: 0.9rem; }
+  .paypal-box { margin-top: 2rem; padding: 1rem; border: 1px solid currentColor; border-radius: 8px; }
+</style>
+</head>
+<body>
+<h1>Oracle69 AgentPay</h1>
+<p><em>AI proposes. Policy governs. Humans authorize. Blockchain settles.</em></p>
+<p><span class="badge">Monad Testnet · chain 10143 · native MON only</span> <span class="badge" id="provider-badge">PayPal mode: loading…</span></p>
+<div class="warn"><strong>This Monad Testnet preflight demo does not execute payments on-chain.</strong> It runs read-only checks (policy, approval, network, fees, balance) and displays the result. Nothing on Monad is signed, submitted, or settled here. The separate PayPal section below uses the PayPal Sandbox when configured; simulated mode is always labelled.</div>
+
+<div class="paypal-box" id="paypal-section">
+  <h2>PayPal Payment</h2>
+  <div id="simulation-banner" class="sim" style="display:none;">SIMULATION MODE — no real PayPal payment is created, approved, or captured.</div>
+  <div id="step-indicator">
+  <!-- AI mode state -->
+  <div id="ai-mode-state" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; border: 1px solid currentColor; border-radius: 8px; font-size: 0.85rem; display: none; color: #059669;">
+    <span class="badge" id="ai-badge"></span> AI mode active
+  </div>
+    <span class="step-badge step-active" id="step-1">1. Instruction</span>
+    <span class="step-badge" id="step-2">2. Details</span>
+    <span class="step-badge" id="step-3">3. Policy</span>
+    <span class="step-badge" id="step-4">4. Initiate</span>
+    <span class="step-badge" id="step-5">5. Approval</span>
+    <span class="step-badge" id="step-6">6. Capture</span>
+    <span class="step-badge" id="step-7">7. Status</span>
+  </div>
+
+  <div id="step-1-panel" style="margin-top: 1rem;">
+    <label for="paypal-instruction">Natural-language payment instruction</label>
+    <textarea id="paypal-instruction" rows="3" placeholder="e.g. Pay $10.00 USD to merchant@example.com for invoice INV-001"></textarea>
+    <label for="operator-token">Operator token (optional — only if the server requires one)</label>
+    <input id="operator-token" type="password" autocomplete="off" placeholder="Leave empty for the local demo">
+    <button id="process-btn">Extract Payment Details</button>
+  </div>
+
+  <div id="step-2-panel" style="display: none; margin-top: 1rem;">
+    <h3>Extracted Payment Details</h3>
+    <p><strong>Amount:</strong> $<span id="extracted-amount">—</span> <span id="extracted-currency">USD</span></p>
+    <p><strong>Receiver:</strong> <span id="extracted-receiver">—</span></p>
+    <p><strong>Purpose:</strong> <span id="extracted-purpose">—</span></p>
+    <p><strong>Request ID:</strong> <span id="extracted-requestid">—</span></p>
+    <div id="ai-extraction-info" style="margin-top: 0.5rem; padding: 0.25rem; border: 1px solid currentColor; border-radius: 8px;">
+      <span class="badge" id="ai-badge"></span> <span id="ai-desc" class="muted"></span>
+    </div>
+  </div>
+
+  <div id="step-3-panel" style="display: none; margin-top: 1rem;">
+    <h3>Policy Decision</h3>
+    <p id="policy-result">—</p>
+    <button id="initiate-btn" style="width: auto;">Initiate PayPal Payment</button>
+  </div>
+
+  <div id="step-4-panel" style="display: none; margin-top: 1rem;">
+    <h3>PayPal Sandbox Approval</h3>
+    <p><strong>PayPal order:</strong> <span id="paypal-order-id">—</span></p>
+    <p class="muted">Open PayPal Sandbox, sign in as the sandbox buyer, and approve the payment. Then return here.</p>
+    <button id="open-approval-btn">Open PayPal Sandbox Approval</button>
+    <p id="approval-status" class="muted"></p>
+  </div>
+
+  <div id="step-5-panel" style="display: none; margin-top: 1rem;">
+    <h3>Returned from PayPal</h3>
+    <p class="muted">The server will confirm the approval with PayPal before recording it. A browser click alone cannot mark a payment approved.</p>
+    <button id="confirm-approval-btn">I Approved in PayPal — Continue</button>
+    <p id="confirm-status" class="muted"></p>
+  </div>
+
+  <div id="step-6-panel" style="display: none; margin-top: 1rem;">
+    <h3>Complete Capture</h3>
+    <p class="muted">The server re-checks policy, amount, currency, and merchant before requesting capture.</p>
+    <button id="capture-btn">Complete Capture</button>
+    <p id="capture-status" class="muted"></p>
+  </div>
+
+  <div id="step-7-panel" style="display: none; margin-top: 1rem;">
+    <h3>Verified Payment Status</h3>
+    <pre id="payment-status">—</pre>
+    <h4>What happened</h4>
+    <pre id="payment-explanation">—</pre>
+    <h4>Transaction references</h4>
+    <pre id="payment-references">—</pre>
+    <button id="copy-references-btn" style="width: auto;">Copy References</button>
+    <h4>Audit trail</h4>
+    <pre id="payment-audit">—</pre>
+    <button id="reset-btn">Start New Payment</button>
+  </div>
+
+  <p id="paypal-error" class="error" style="margin-top: 1rem;"></p>
+</div>
+
+<form id="preview-form" style="margin-top: 2rem;">
+  <label for="amount">Amount (MON, decimal, max 1)</label>
+  <input id="amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="0.001" value="0.001">
+  <label for="requestId">Request ID (optional — generated if empty)</label>
+  <input id="requestId" name="requestId" autocomplete="off" placeholder="demo-req-1">
+  <label for="proof">Approval proof JSON (optional — leave empty to preview without approval)</label>
+  <textarea id="proof" name="proof" spellcheck="false" placeholder='{"signature":"0x…","domainId":"…","policyVersion":"…","policyDigest":"0x…"}'></textarea>
+  <button type="submit">Run read-only Monad preview</button>
+</form>
+
+<h2>Result</h2>
+<p id="status" class="ok">No preview run yet.</p>
+<pre id="result">—</pre>
+
+<script>
+(function () {
+  "use strict";
+  const PAYPAL_BASE = "/api/paypal";
+  const panels = {
+    1: document.getElementById("step-1-panel"),
+    2: document.getElementById("step-2-panel"),
+    3: document.getElementById("step-3-panel"),
+    4: document.getElementById("step-4-panel"),
+    5: document.getElementById("step-5-panel"),
+    6: document.getElementById("step-6-panel"),
+    7: document.getElementById("step-7-panel"),
+  };
+  const badges = Array.from(document.querySelectorAll("#step-indicator .step-badge"));
+  const providerBadge = document.getElementById("provider-badge");
+  const simulationBanner = document.getElementById("simulation-banner");
+  const instructionEl = document.getElementById("paypal-instruction");
+  const operatorTokenEl = document.getElementById("operator-token");
+  const processBtn = document.getElementById("process-btn");
+  const initiateBtn = document.getElementById("initiate-btn");
+  const openApprovalBtn = document.getElementById("open-approval-btn");
+  const confirmApprovalBtn = document.getElementById("confirm-approval-btn");
+  const captureBtn = document.getElementById("capture-btn");
+  const copyReferencesBtn = document.getElementById("copy-references-btn");
+  const resetBtn = document.getElementById("reset-btn");
+  const extractedAmount = document.getElementById("extracted-amount");
+  const extractedReceiver = document.getElementById("extracted-receiver");
+  const extractedCurrency = document.getElementById("extracted-currency");
+  const extractedPurpose = document.getElementById("extracted-purpose");
+  const extractedRequestId = document.getElementById("extracted-requestid");
+  const policyResult = document.getElementById("policy-result");
+  const paypalOrderIdEl = document.getElementById("paypal-order-id");
+  const approvalStatus = document.getElementById("approval-status");
+  const confirmStatus = document.getElementById("confirm-status");
+  const captureStatus = document.getElementById("capture-status");
+  const paymentStatusPre = document.getElementById("payment-status");
+  const paymentExplanationPre = document.getElementById("payment-explanation");
+  const paymentReferencesPre = document.getElementById("payment-references");
+  const paymentAuditPre = document.getElementById("payment-audit");
+  const paypalError = document.getElementById("paypal-error");
+
+  let extracted = null;
+  let payment = null;
+  let providerModeState = "mock";
+  let providerSimulatedState = true;
+  let operatorAuthState = "operator auth: unknown";
+
+  function showStage(n) {
+    for (let i = 1; i <= 7; i += 1) {
+      panels[i].style.display = i <= n ? "block" : "none";
+    }
+    badges.forEach((badge, index) => badge.classList.toggle("step-active", index < n));
+  }
+
+  function setError(message) {
+    paypalError.textContent = message || "";
+  }
+
+  function renderProviderBadge() {
+    const mode = providerModeState === "mock" ? "PayPal mode: SIMULATED (mock)" : "PayPal mode: Sandbox";
+    providerBadge.textContent = `${mode} · ${operatorAuthState}`;
+    simulationBanner.style.display = providerSimulatedState ? "block" : "none";
+  }
+
+  function setProviderMode(mode, simulated) {
+    providerModeState = mode;
+    providerSimulatedState = Boolean(simulated);
+    renderProviderBadge();
+  }
+
+  function setOperatorAuth(authMode, required) {
+    operatorAuthState = required || authMode === "operator-token"
+      ? "operator auth: required"
+      : "operator auth: OPEN (local demo)";
+    renderProviderBadge();
+  }
+
+  function authHeaders() {
+    const token = operatorTokenEl.value.trim();
+    return token ? { "x-agentpay-operator-token": token } : {};
+  }
+
+  async function request(path, options) {
+    const init = {
+      credentials: "same-origin",
+      ...options,
+      headers: { "content-type": "application/json", ...authHeaders(), ...(options && options.headers ? options.headers : {}) },
+    };
+    const response = await fetch(`${PAYPAL_BASE}${path}`, init);
+    let data = null;
+    try { data = await response.json(); } catch (e) { data = null; }
+    return { status: response.status, ok: response.ok, data: data || {} };
+  }
+
+  function formatMoney(amountMinor) {
+    return (Number(amountMinor) / 100).toFixed(2);
+  }
+
+  function renderStatus(data) {
+    const modeLabel = data.simulated
+      ? "MOCK — SIMULATED, NOT A REAL PAYPAL PAYMENT"
+      : "PAYPAL SANDBOX — real sandbox provider evidence";
+    const lines = [
+      `State: ${data.state}`,
+      `Verified capture: ${data.verified ? "YES — provider-confirmed capture" : "NO"}`,
+      `Payment ID / request ID: ${data.paymentId || data.requestId || "—"}`,
+      `PayPal order ID: ${data.paypalOrderId || data.orderId || "—"}`,
+      `PayPal capture ID: ${data.paypalCaptureId || data.captureId || "—"}`,
+      `Receiver: ${data.receiver}`,
+      `Amount: $${formatMoney(data.amountMinor)} ${data.currency}`,
+      `Purpose: ${data.purpose || "—"}`,
+      `Provider mode: ${modeLabel}`,
+      `Created: ${data.createdAt ? new Date(data.createdAt * 1000).toISOString() : "—"}`,
+      `Capture verified: ${data.captureVerifiedAt ? new Date(data.captureVerifiedAt * 1000).toISOString() : "—"}`,
+      `Approval recorded: ${data.approvalVerifiedAt ? new Date(data.approvalVerifiedAt * 1000).toISOString() : "—"}`,
+    ];
+    paymentStatusPre.textContent = lines.join("\n");
+
+    const explanation = data.explanation;
+    if (explanation) {
+      const explanationLines = [
+        explanation.summary,
+        `Next step: ${explanation.nextStep}`,
+        ...(Array.isArray(explanation.details) ? explanation.details : []),
+      ];
+      paymentExplanationPre.textContent = explanationLines.join("\n");
+    } else {
+      paymentExplanationPre.textContent = "No explanation was returned by the server.";
+    }
+
+    const references = [
+      `internal request ID: ${data.requestId || "—"}`,
+      `internal payment ID: ${data.paymentId || "—"}`,
+      `PayPal order ID: ${data.paypalOrderId || data.orderId || "—"}`,
+      `PayPal capture ID: ${data.paypalCaptureId || data.captureId || "—"}`,
+      `amount: ${formatMoney(data.amountMinor)} ${data.currency}`,
+      `merchant: ${data.receiver || "—"}`,
+      `purpose: ${data.purpose || "—"}`,
+      `state: ${data.state || "—"}`,
+      `provider mode: ${data.providerMode || "—"}${data.simulated ? " (simulated)" : " (sandbox)"}`,
+    ];
+    paymentReferencesPre.textContent = references.join("\n");
+  }
+
+  async function loadAudit(paymentId) {
+    paymentAuditPre.textContent = "Loading audit trail…";
+    try {
+      const audit = await request(`/payment/${encodeURIComponent(paymentId)}/audit`, { method: "GET" });
+      if (!audit.ok) {
+        paymentAuditPre.textContent = audit.data.error || "Audit trail unavailable.";
+        return;
+      }
+      const events = Array.isArray(audit.data.audit) ? audit.data.audit : [];
+      paymentAuditPre.textContent = events.length === 0
+        ? "No audit events recorded."
+        : events.map((event) => {
+            const when = new Date(event.createdAt * 1000).toISOString();
+            const refs = [event.providerOrderId, event.captureId].filter(Boolean).join(" / ");
+            return `#${event.id} ${when} ${event.eventType} [${event.state}] ${event.message}${event.code ? " (" + event.code + ")" : ""}${refs ? " — " + refs : ""}`;
+          }).join("\n");
+    } catch (err) {
+      paymentAuditPre.textContent = err instanceof Error ? err.message : "Audit trail unavailable.";
+    }
+  }
+
+  async function showFinalStatus(paymentId) {
+    const status = await request(`/payment/${encodeURIComponent(paymentId)}`, { method: "GET" });
+    if (status.ok) renderStatus(status.data);
+    await loadAudit(paymentId);
+  }
+
+  processBtn.addEventListener("click", async () => {
+    setError("");
+    extracted = null;
+    payment = null;
+    const instruction = instructionEl.value.trim();
+    if (!instruction) {
+      setError("Enter a payment instruction first.");
+      return;
+    }
+    processBtn.disabled = true;
+    try {
+      // Step 1: Try AI extraction first
+      const aiResponse = await request("/api/paypal/ai-extract", {
+        method: "POST",
+        body: JSON.stringify({ instruction }),
+      });
+      const aiOk = aiResponse.ok && aiResponse.data && aiResponse.data.aiInterpreted === true;
+      
+      if (aiOk) {
+        // AI extraction succeeded
+        extracted = {
+          aiInterpreted: true,
+          receiver: aiResponse.data.receiver,
+          amount: aiResponse.data.amount,
+          currency: aiResponse.data.currency,
+          purpose: aiResponse.data.purpose,
+          intent: {
+            requestId: aiResponse.data.intent.requestId,
+            receiver: aiResponse.data.receiver,
+            amountMinor: BigInt(Math.round(parseFloat(aiResponse.data.amount) * 100)),
+            currency: aiResponse.data.currency,
+            purpose: aiResponse.data.purpose,
+            nonce: "",
+          },
+        };
+        // Show AI badge
+        const aiBadge = document.createElement("span");
+        aiBadge.className = "badge ai-badge";
+        aiBadge.textContent = "AI-INTERPRETED";
+        // Remove existing AI badge if any
+        const existingAiBadge = document.querySelector(".ai-badge");
+        if (existingAiBadge) existingAiBadge.remove();
+        const step2Panel = document.getElementById("step-2-panel");
+        step2Panel.appendChild(aiBadge);
+        
+        // Display AI-extracted details
+        extractedAmount.textContent = parseFloat(aiResponse.data.amount).toFixed(2);
+        extractedReceiver.textContent = aiResponse.data.receiver;
+        extractedCurrency.textContent = aiResponse.data.currency;
+        extractedPurpose.textContent = aiResponse.data.purpose;
+        extractedRequestId.textContent = aiResponse.data.intent.requestId;
+        
+        // Update AI mode state display
+        const aiModeState = document.getElementById("ai-mode-state");
+        aiModeState.style.display = "block";
+        const aiBadgeDisplay = document.getElementById("ai-badge");
+        aiBadgeDisplay.textContent = "AI-INTERPRETED";
+      } else {
+        // AI extraction failed or not available — show error
+        // DO NOT silently fall back to deterministic regex parser
+        const aiError = aiResponse.data ? (aiResponse.data.reason || aiResponse.data.error || "Unknown AI error") : "AI endpoint unavailable";
+        setError(`AI extraction failed: ${aiError}. The deterministic regex parser is available but not auto-activated per security policy.`);
+        
+        // Try deterministic parser only as explicit user choice (not automatic fallback)
+        // If user wants deterministic, they can click "Use deterministic parsing" 
+        // but per policy we do NOT auto-activate it here.
+        // Just mark that AI failed and proceed with whatever we have.
+        extracted = { aiInterpreted: false, error: "AI failed" };
+        
+        policyResult.textContent = "AI extraction failed — policy cannot be evaluated without valid extraction.";
+        policyResult.className = "error";
+        initiateBtn.disabled = true;
+        showStage(3);
+        return;
+      }
+      
+      // Policy check
+      const policy = extracted ? extracted.policy : null;
+      if (policy && policy.allowed) {
+        const reasons = policy.preApprovalReasons || [];
+        policyResult.textContent = reasons.length > 0
+          ? "Policy satisfied. Human approval is required before any capture. (" + reasons.map((r) => r.code).join(", ") + ")"
+          : "Policy satisfied. Human approval is required before any capture.";
+        policyResult.className = "ok";
+        initiateBtn.disabled = false;
+      } else if (policy) {
+        policyResult.textContent = "Policy rejected: " + (policy.reasons || []).map((r) => r.code + " — " + r.message).join("; ");
+        policyResult.className = "error";
+        initiateBtn.disabled = true;
+      } else {
+        policyResult.textContent = "No policy available — please verify extraction.";
+        policyResult.className = "error";
+        initiateBtn.disabled = true;
+      }
+      showStage(3);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "request failed");
+    } finally {
+      processBtn.disabled = false;
+    }
+  });
+
+  initiateBtn.addEventListener("click", async () => {
+    if (!extracted) return;
+    setError("");
+    initiateBtn.disabled = true;
+    try {
+      const result = await request("/intent", {
+        method: "POST",
+        body: JSON.stringify(extracted.intent),
+      });
+      if (!result.ok) {
+        setError(result.data.error || "Could not initiate payment");
+        return;
+      }
+      payment = result.data;
+      setProviderMode(result.data.providerMode, result.data.simulated);
+      paypalOrderIdEl.textContent = result.data.paypalOrderId || "—";
+      approvalStatus.textContent = result.data.simulated
+        ? "Simulated order created. No PayPal page exists in mock mode; continue below to simulate the buyer return."
+        : "PayPal order created. Open the Sandbox approval page, approve as the sandbox buyer, then return here.";
+      openApprovalBtn.disabled = !result.data.paypalApprovalUrl;
+      showStage(4);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "request failed");
+    } finally {
+      initiateBtn.disabled = false;
+    }
+  });
+
+  openApprovalBtn.addEventListener("click", () => {
+    if (!payment) return;
+    if (!payment.paypalApprovalUrl) {
+      approvalStatus.textContent = "SIMULATION MODE — no real PayPal approval page exists.";
+    } else {
+      window.open(payment.paypalApprovalUrl, "_blank", "noopener");
+      approvalStatus.textContent = "Opened PayPal Sandbox approval in a new tab. Return when finished.";
+    }
+    showStage(5);
+  });
+
+  confirmApprovalBtn.addEventListener("click", async () => {
+    if (!payment) return;
+    setError("");
+    confirmApprovalBtn.disabled = true;
+    try {
+      const result = await request("/approve", {
+        method: "POST",
+        body: JSON.stringify({ requestId: payment.requestId, paypalOrderId: payment.paypalOrderId }),
+      });
+      if (!result.ok) {
+        setError(result.data.error || "PayPal has not confirmed the approval");
+        confirmStatus.textContent = result.data.providerStatus ? `PayPal order status: ${result.data.providerStatus}` : "";
+        return;
+      }
+      confirmStatus.textContent = result.data.simulated
+        ? "Simulated approval recorded. No real PayPal approval occurred."
+        : "PayPal approval confirmed by the server.";
+      showStage(6);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "request failed");
+    } finally {
+      confirmApprovalBtn.disabled = false;
+    }
+  });
+
+  captureBtn.addEventListener("click", async () => {
+    if (!payment) return;
+    setError("");
+    captureBtn.disabled = true;
+    try {
+      const result = await request("/capture", {
+        method: "POST",
+        body: JSON.stringify({ requestId: payment.requestId, paypalOrderId: payment.paypalOrderId }),
+      });
+      if (!result.ok) {
+        if (result.data.state === "UNKNOWN" || result.data.state === "CAPTURED") {
+          const status = await request(`/payment/${encodeURIComponent(payment.requestId)}`, { method: "GET" });
+          if (status.ok) {
+            renderStatus(status.data);
+            await loadAudit(payment.requestId);
+            showStage(7);
+            setError(result.data.error || "");
+            return;
+          }
+        }
+        captureStatus.textContent = result.data.state ? `State: ${result.data.state}` : "";
+        setError(result.data.error || "capture failed");
+        return;
+      }
+      captureStatus.textContent = result.data.simulated
+        ? "Simulated capture complete — no real funds moved."
+        : "Capture complete and verified by PayPal.";
+      const status = await request(`/payment/${encodeURIComponent(payment.requestId)}`, { method: "GET" });
+      if (status.ok) renderStatus(status.data);
+      else renderStatus(result.data);
+      await loadAudit(payment.requestId);
+      showStage(7);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "request failed");
+    } finally {
+      captureBtn.disabled = false;
+    }
+  });
+
+  resetBtn.addEventListener("click", () => {
+    instructionEl.value = "";
+    extracted = null;
+    payment = null;
+    extractedAmount.textContent = "—";
+    extractedReceiver.textContent = "—";
+    extractedCurrency.textContent = "—";
+    extractedPurpose.textContent = "—";
+    extractedRequestId.textContent = "—";
+    policyResult.textContent = "—";
+    policyResult.className = "";
+    paypalOrderIdEl.textContent = "—";
+    approvalStatus.textContent = "";
+    confirmStatus.textContent = "";
+    captureStatus.textContent = "";
+    paymentStatusPre.textContent = "—";
+    paymentExplanationPre.textContent = "—";
+    paymentReferencesPre.textContent = "—";
+    paymentAuditPre.textContent = "—";
+    setError("");
+    showStage(1);
+  });
+
+  copyReferencesBtn.addEventListener("click", async () => {
+    const text = paymentReferencesPre.textContent || "";
+    try {
+      await navigator.clipboard.writeText(text);
+      copyReferencesBtn.textContent = "Copied";
+      setTimeout(() => { copyReferencesBtn.textContent = "Copy References"; }, 1500);
+    } catch (err) {
+      setError("Clipboard unavailable. Select and copy the references manually.");
+    }
+  });
+
+  fetch("/health", { credentials: "same-origin" })
+    .then((response) => response.json())
+    .then((data) => {
+      setProviderMode(data.providerMode, data.simulated);
+      setOperatorAuth(data.authMode, data.operatorAuthRequired);
+    })
+    .catch(() => { providerBadge.textContent = "PayPal mode: unavailable"; });
+
+  showStage(1);
+})();
+
+// Existing read-only Monad preview form.
+(function () {
+  "use strict";
+  const form = document.getElementById("preview-form");
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    status.textContent = "Running read-only preview…";
+    result.textContent = "—";
+    const amountMon = document.getElementById("amount").value.trim();
+    const requestId = document.getElementById("requestId").value.trim();
+    const proofRaw = document.getElementById("proof").value.trim();
+    const payload = { amountMon };
+    if (requestId) payload.requestId = requestId;
+    if (proofRaw) {
+      try { payload.proof = JSON.parse(proofRaw); }
+      catch (e) {
+        status.textContent = "Proof must be valid JSON.";
+        return;
+      }
+    }
+    try {
+      const response = await fetch("/api/preview", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      status.textContent = data.banner || (response.ok ? "Preview complete." : "Preview failed.");
+      result.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      status.textContent = "Preview request failed.";
+      result.textContent = err instanceof Error ? err.message : "request failed";
+    }
+  });
+})();
+</script>
+</body>
+</html>
