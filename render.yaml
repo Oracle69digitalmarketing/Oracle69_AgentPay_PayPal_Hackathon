@@ -1,0 +1,91 @@
+# Render.com deployment configuration for AgentPay PayPal Sandbox Demo
+# This file is committed to the repository for review; secret values must be
+# supplied via the Render dashboard (never checked in).
+
+services:
+  - type: web
+    name: agentpay-paypal-hackathon
+    runtime: node
+    engine: node22
+
+    # Region: Frankfurt (eu-central)
+    # If Frankfurt is unavailable on the account, the closest available region
+    # will be used automatically.
+    region: frankfurt
+
+    # Build: compile TypeScript and copy static public assets into dist
+    # The pnpm lockfile ensures reproducible installs.
+    buildCommand: pnpm build:server
+
+    # Start: run the compiled server
+    # PORT is provided by Render automatically; the server reads it.
+    startCommand: node dist/server/server.js
+
+    # Health check: the server returns HTTP 200 at /health
+    # It also reports operator auth status for dashboard visibility.
+    healthCheck:
+      path: /health
+      timeout: 30
+      interval: 60
+      successStatuses: [200]
+
+    # Persistent disk for SQLite storage
+    # A paid Render plan is required for persistent disk support.
+    # The disk is mounted at /var/data and the SQLite database is placed there.
+    # On the free tier, the disk persists across deployments but not across
+    # instance restarts in the same way; a paid plan is recommended for
+    # production-sandbox demo reliability.
+    disk:
+      name: paypal-database
+      mountPath: /var/data
+      sizeGB: 1
+
+    # Environment variables — declared as dashboard-supplied secrets
+    # The following are marked as secret so Render does not expose them in logs
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PAYPAL_MODE
+        value: sandbox
+      - key: PAYPAL_BASE_URL
+        value: https://api-m.sandbox.paypal.com
+      - key: PAYPAL_MAX_MINOR
+        value: "1000"
+      - key: PAYPAL_DB_PATH
+        value: /var/data/paypal.sqlite
+      - key: PAYPAL_PUBLIC_DEPLOYMENT
+        value: "true"
+      - key: PAYPAL_REQUIRE_OPERATOR_AUTH
+        value: "true"
+      - key: AI_PROVIDER
+        value: groq
+      - key: AI_MODEL_NAME
+        value: openai/gpt-oss-20b
+      - key: AI_BASE_URL
+        value: https://api.groq.com/openai/v1
+
+    # Secret environment variables — supplied via Render dashboard UI
+    # These must be set in the Render dashboard; never checked into Git.
+    # render.yaml does NOT include values for these; they are dashboard-only.
+    # secrets:
+    #   PAYPAL_CLIENT_ID:
+    #   PAYPAL_CLIENT_SECRET:
+    #   PAYPAL_MERCHANT_ID:
+    #   PAYPAL_ALLOWED_RECEIVERS:
+    #   PAYPAL_OPERATOR_TOKEN:
+    #   AI_API_KEY:
+
+# Notes:
+# - The /health endpoint returns 200 with { ok: true, providerMode, simulated, operatorAuthRequired, authMode }
+# - PAYPAL_MODE=sandbox is enforced; "live" mode cannot be selected via this config
+# - PAYPAL_REQUIRE_OPERATOR_AUTH=true ensures the server refuses to start without
+#   an operator token when in production or public deployment mode
+# - The $10 payment ceiling (1000 minor units = $10.00) is enforced by policy:
+#   PAYPAL_MAX_MINOR=1000
+# - AI cannot authorize or execute payments; human approval is always required
+#   (requireHumanApproval: true in policy)
+# - CAPTURED outcomes require independent provider verification via
+#   verifyCaptureResponse; ambiguous outcomes are terminal (retryable: false)
+# - No secrets are exposed through frontend responses or health checks
+# - The original Monad repository at /home/oracle69/projects/Oracle69_AgentPay
+#   remains untouched by this configuration
