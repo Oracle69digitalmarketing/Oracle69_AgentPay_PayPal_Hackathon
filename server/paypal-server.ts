@@ -1256,6 +1256,7 @@ export function createPayPalRouter(options: PayPalRouterOptions = {}): PayPalReq
     }
     if (pathname === "/api/paypal/intent" && req.method === "POST") {
       await handleCreateIntent(req, res);
+      return true;
     }
     if (pathname === "/api/paypal/ai-extract" && req.method === "POST") {
       await handleAiExtract(req, res);
