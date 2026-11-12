@@ -3,584 +3,2896 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Oracle69 AgentPay — PayPal Sandbox + Monad Testnet Demo</title>
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex, nofollow">
+<title>Oracle69 AgentPay — Payment Operations Console</title>
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
-  .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; border: 1px solid currentColor; font-size: 0.85rem; }
-  .warn { border: 2px solid currentColor; padding: 0.75rem 1rem; border-radius: 8px; margin: 1rem 0; }
-  .sim { border: 2px dashed #b45309; color: #b45309; padding: 0.5rem 0.75rem; border-radius: 8px; margin: 0.75rem 0; font-weight: 700; }
-  label { display: block; margin-top: 0.75rem; font-weight: 600; }
-  input, textarea, button { width: 100%; box-sizing: border-box; padding: 0.5rem; margin-top: 0.25rem; font: inherit; }
-  textarea { min-height: 5rem; font-family: monospace; }
-  button { cursor: pointer; margin-top: 1rem; }
-  button:disabled { cursor: not-allowed; opacity: 0.6; }
-  pre { white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid currentColor; border-radius: 8px; padding: 1rem; }
-  .ok { font-weight: 700; }
-  .error { color: #b91c1c; font-weight: 700; }
-  .step-badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; margin: 0 0.2rem 0.3rem 0; background: #e2e8f0; color: #0f172a; }
-  .step-active { background: #3b82f6; color: white; }
-  .muted { color: #64748b; font-size: 0.9rem; }
-  .paypal-box { margin-top: 2rem; padding: 1rem; border: 1px solid currentColor; border-radius: 8px; }
+  :root {
+    color-scheme: light;
+    --navy-950: #060b15;
+    --navy-900: #0a1322;
+    --navy-800: #101d33;
+    --navy-700: #1a2b47;
+    --ink: #0f1b2d;
+    --ink-2: #243449;
+    --muted: #5a6a80;
+    --muted-2: #7a8aa0;
+    --surface: #ffffff;
+    --surface-2: #f5f8fc;
+    --surface-3: #edf2f8;
+    --line: #dde5ef;
+    --line-strong: #c5d2e2;
+    --blue-800: #173e9e;
+    --blue-700: #1d4ed8;
+    --blue-600: #2563eb;
+    --blue-500: #3b82f6;
+    --blue-100: #dbeafe;
+    --blue-50: #eff6ff;
+    --green-700: #047857;
+    --green-600: #059669;
+    --green-500: #10b981;
+    --green-100: #d1fae5;
+    --green-50: #ecfdf5;
+    --amber-800: #92400e;
+    --amber-700: #b45309;
+    --amber-600: #d97706;
+    --amber-100: #fef3c7;
+    --amber-50: #fffbeb;
+    --red-700: #b91c1c;
+    --red-600: #dc2626;
+    --red-100: #fee2e2;
+    --red-50: #fef2f2;
+    --slate-100: #e9eef5;
+    --slate-50: #f4f7fa;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 1px 2px rgba(15, 27, 45, 0.05), 0 1px 3px rgba(15, 27, 45, 0.08);
+    --shadow-md: 0 16px 40px -18px rgba(10, 19, 34, 0.35);
+    --shadow-lg: 0 30px 90px -24px rgba(6, 11, 21, 0.55);
+    --sidebar-w: 268px;
+    --sidebar-w-collapsed: 78px;
+    --font: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: "SFMono-Regular", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background: var(--surface-2);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4, p, dl, dd { margin: 0; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: var(--blue-700); }
+  code, .mono { font-family: var(--mono); font-size: 0.83rem; }
+  :focus-visible { outline: 3px solid rgba(59, 130, 246, 0.45); outline-offset: 2px; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  .app { min-height: 100vh; }
+  .sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 60;
+    width: var(--sidebar-w);
+    display: flex; flex-direction: column;
+    background: linear-gradient(175deg, var(--navy-950) 0%, var(--navy-900) 46%, var(--navy-800) 100%);
+    color: #dbe6f5;
+    transition: width 0.22s ease, transform 0.22s ease;
+    box-shadow: 1px 0 0 rgba(255, 255, 255, 0.04);
+  }
+  .sidebar-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 22px 18px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    min-height: 82px;
+  }
+  .brand-mark {
+    flex: 0 0 auto;
+    width: 40px; height: 40px; border-radius: 12px;
+    display: grid; place-items: center;
+    font-family: var(--mono); font-weight: 700; font-size: 0.74rem; letter-spacing: 0.03em;
+    color: #fff;
+    background: linear-gradient(145deg, var(--blue-500), var(--blue-800));
+    box-shadow: 0 6px 18px -6px rgba(37, 99, 235, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  .brand-text { min-width: 0; }
+  .brand-name { font-weight: 800; letter-spacing: -0.02em; font-size: 1rem; color: #fff; white-space: nowrap; }
+  .brand-sub { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: #8fa4c4; white-space: nowrap; }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 14px 10px 20px; }
+  .nav-label {
+    font-size: 0.64rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: #7489a9; padding: 16px 12px 7px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+    padding: 10px 12px; margin-bottom: 2px;
+    border: 0; border-radius: 10px; background: transparent;
+    color: #bccbe0; text-align: left; font-weight: 600; font-size: 0.9rem;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .nav-item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+  .nav-item[aria-current="page"] {
+    color: #fff;
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.08));
+    box-shadow: inset 3px 0 0 var(--blue-500);
+  }
+  .nav-ico { flex: 0 0 auto; width: 20px; height: 20px; }
+  .nav-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar-foot {
+    padding: 14px 16px 18px; border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: grid; gap: 8px; font-size: 0.72rem; color: #93a7c5;
+  }
+  .sidebar-foot .foot-row { display: flex; align-items: center; gap: 8px; }
+  .sidebar-foot .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-500); flex: 0 0 auto; }
+  .sidebar-foot .dot.warn { background: #f59e0b; }
+  .sidebar-foot .dot.fail { background: #ef4444; }
+  .main {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    transition: margin-left 0.22s ease;
+    min-width: 0;
+  }
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 28px;
+    background: rgba(245, 248, 252, 0.86);
+    backdrop-filter: saturate(150%) blur(12px);
+    -webkit-backdrop-filter: saturate(150%) blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .icon-btn {
+    flex: 0 0 auto; display: grid; place-items: center;
+    width: 38px; height: 38px; border-radius: 10px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .icon-btn:hover { background: var(--surface-3); }
+  .topbar-heading { min-width: 0; margin-right: auto; }
+  .topbar-title { font-size: 1rem; font-weight: 750; letter-spacing: -0.015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-sub { font-size: 0.73rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .content { width: 100%; max-width: 1320px; margin: 0 auto; padding: 28px; }
+  .stack { display: grid; gap: 18px; align-content: start; }
+  .view { display: none; }
+  .view.active { display: block; animation: viewIn 0.22s ease both; }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .eyebrow {
+    display: inline-block; font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue-700);
+    margin-bottom: 8px;
+  }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 20px; flex-wrap: wrap; }
+  .page-head h1 { font-size: 1.65rem; font-weight: 800; letter-spacing: -0.03em; }
+  .page-sub { color: var(--muted); font-size: 0.9rem; margin-top: 5px; max-width: 70ch; }
+  .hero {
+    position: relative; overflow: hidden;
+    display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr); gap: 24px;
+    padding: 30px;
+    border-radius: 18px;
+    color: #e8f0fb;
+    background:
+      radial-gradient(900px 320px at 88% -10%, rgba(59, 130, 246, 0.42), transparent 60%),
+      radial-gradient(600px 280px at 0% 120%, rgba(16, 185, 129, 0.16), transparent 60%),
+      linear-gradient(160deg, var(--navy-900), var(--navy-800));
+    box-shadow: var(--shadow-md);
+  }
+  .hero h1 { font-size: 2rem; font-weight: 820; letter-spacing: -0.035em; color: #fff; }
+  .hero .eyebrow { color: #93b4f5; }
+  .hero-tag { font-size: 1.02rem; font-weight: 650; color: #d7e6fb; margin-top: 8px; }
+  .hero-sub { color: #a9bcd8; font-size: 0.9rem; margin-top: 10px; max-width: 62ch; }
+  .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+  .hero-badges { display: flex; flex-direction: column; gap: 10px; align-content: start; }
+  .hero-badge {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    font-size: 0.8rem; font-weight: 600; color: #dbe6f5;
+  }
+  .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+  .hero-badge .dot.green { background: var(--green-500); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16); }
+  .hero-badge .dot.amber { background: #f59e0b; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.16); }
+  .hero-badge .dot.blue { background: var(--blue-500); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16); }
+  .grid { display: grid; gap: 18px; }
+  .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .payment-layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr); gap: 18px; align-items: start; }
+  .mt-18 { margin-top: 18px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .card-head.tight { padding-bottom: 14px; }
+  .card-title { font-size: 1rem; font-weight: 750; letter-spacing: -0.015em; }
+  .card-sub { color: var(--muted); font-size: 0.8rem; margin-top: 4px; max-width: 68ch; }
+  .card-body { padding: 20px; }
+  .card-body.tight { padding: 16px 20px; }
+  .card-foot { padding: 14px 20px; border-top: 1px solid var(--line); background: var(--surface-2); }
+  .kpi { padding: 18px 20px; display: grid; gap: 4px; }
+  .kpi-label { display: flex; align-items: center; gap: 8px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+  .kpi-value { font-size: 1.95rem; font-weight: 820; letter-spacing: -0.035em; line-height: 1.15; }
+  .kpi-meta { font-size: 0.76rem; color: var(--muted-2); }
+  .kpi.success .kpi-value { color: var(--green-700); }
+  .kpi.pending .kpi-value { color: var(--amber-700); }
+  .kpi.fail .kpi-value { color: var(--red-700); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 42px; padding: 10px 16px;
+    border-radius: 10px; border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--ink);
+    font-weight: 680; font-size: 0.9rem; line-height: 1.2;
+    transition: transform 0.06s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--surface-3); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary {
+    border-color: var(--blue-700);
+    background: linear-gradient(180deg, var(--blue-600), var(--blue-700));
+    color: #fff;
+    box-shadow: 0 8px 20px -10px rgba(37, 99, 235, 0.9);
+  }
+  .btn.primary:hover { background: linear-gradient(180deg, var(--blue-500), var(--blue-600)); }
+  .btn.success {
+    border-color: var(--green-700);
+    background: linear-gradient(180deg, var(--green-600), var(--green-700));
+    color: #fff;
+    box-shadow: 0 8px 20px -10px rgba(5, 150, 105, 0.9);
+  }
+  .btn.success:hover { background: linear-gradient(180deg, var(--green-500), var(--green-600)); }
+  .btn.danger {
+    border-color: var(--red-700);
+    background: linear-gradient(180deg, var(--red-600), var(--red-700));
+    color: #fff;
+  }
+  .btn.dark {
+    border-color: var(--navy-700); background: var(--navy-900); color: #fff;
+  }
+  .btn.dark:hover { background: var(--navy-800); }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--blue-700); }
+  .btn.ghost:hover { background: var(--blue-50); }
+  .btn.sm { min-height: 32px; padding: 6px 10px; font-size: 0.78rem; border-radius: 8px; gap: 6px; }
+  .btn:disabled, .btn[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label { display: flex; align-items: center; gap: 8px; font-size: 0.83rem; font-weight: 700; margin-bottom: 7px; }
+  .input {
+    width: 100%; padding: 11px 13px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    font-size: 0.92rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input:hover { border-color: #aebdd1; }
+  .input:focus { outline: none; border-color: var(--blue-500); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.13); }
+  textarea.input { min-height: 108px; resize: vertical; line-height: 1.55; }
+  textarea.input.mono { font-size: 0.8rem; }
+  .hint { display: flex; gap: 6px; align-items: flex-start; color: var(--muted); font-size: 0.76rem; margin-top: 7px; }
+  .hint strong { color: var(--ink-2); }
+  .required { color: var(--red-700); font-weight: 800; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.015em;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+  .chip.success { background: var(--green-50); color: var(--green-700); border-color: var(--green-100); }
+  .chip.pending,
+  .chip.warn { background: var(--amber-50); color: var(--amber-800); border-color: var(--amber-100); }
+  .chip.fail { background: var(--red-50); color: var(--red-700); border-color: var(--red-100); }
+  .chip.unknown { background: var(--slate-100); color: #475569; border-color: var(--line-strong); border-style: dashed; }
+  .chip.info { background: var(--blue-50); color: var(--blue-800); border-color: var(--blue-100); }
+  .chip.neutral { background: var(--surface-3); color: var(--muted); border-color: var(--line); }
+  .chip.required-chip { background: var(--red-50); color: var(--red-700); border-color: var(--red-100); }
+  .banner {
+    display: flex; align-items: flex-start; gap: 11px;
+    padding: 13px 15px; border-radius: 12px;
+    border: 1px solid; font-size: 0.84rem; line-height: 1.5;
+  }
+  .banner strong { font-weight: 800; }
+  .banner .b-icon { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; }
+  .banner.info { background: var(--blue-50); border-color: var(--blue-100); color: #1e3a8a; }
+  .banner.warn { background: var(--amber-50); border-color: var(--amber-100); color: var(--amber-800); }
+  .banner.danger { background: var(--red-50); border-color: var(--red-100); color: var(--red-700); }
+  .banner.success { background: var(--green-50); border-color: var(--green-100); color: var(--green-700); }
+  .banner.neutral { background: var(--surface-3); border-color: var(--line); color: var(--ink-2); }
+  .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .detail { padding: 11px 14px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); min-width: 0; }
+  .detail:nth-child(2n) { border-right: 0; }
+  .detail dt { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .detail dd { font-size: 0.87rem; font-weight: 600; overflow-wrap: anywhere; }
+  .detail dd.mono { font-weight: 500; }
+  .detail.full { grid-column: 1 / -1; border-right: 0; }
+  .divider { height: 1px; background: var(--line); margin: 18px 0; }
+  .empty {
+    display: grid; justify-items: center; gap: 8px;
+    text-align: center; padding: 30px 20px;
+    color: var(--muted); font-size: 0.86rem;
+  }
+  .empty .empty-ico {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: grid; place-items: center;
+    background: var(--surface-3); color: var(--muted-2);
+  }
+  .empty strong { color: var(--ink-2); font-size: 0.92rem; }
+  .empty p { max-width: 46ch; }
+  .table-wrap { overflow-x: auto; }
+  table.data { width: 100%; border-collapse: collapse; min-width: 820px; }
+  table.data th {
+    text-align: left; padding: 11px 16px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+    font-size: 0.68rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap;
+  }
+  table.data td { padding: 13px 16px; border-bottom: 1px solid var(--line); font-size: 0.86rem; vertical-align: middle; }
+  table.data tbody tr:last-child td { border-bottom: 0; }
+  table.data tbody tr:hover td { background: #fafcff; }
+  .cell-strong { font-weight: 700; }
+  .cell-sub { display: block; color: var(--muted); font-size: 0.74rem; margin-top: 2px; }
+  .tx-cards { display: none; }
+  .tx-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; background: var(--surface); }
+  .tx-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .tx-card-row { display: flex; justify-content: space-between; gap: 12px; font-size: 0.82rem; }
+  .tx-card-row span:first-child { color: var(--muted); }
+  .tx-card-row span:last-child { font-weight: 650; text-align: right; overflow-wrap: anywhere; }
+  .timeline { list-style: none; margin: 0; padding: 0; position: relative; }
+  .timeline::before { content: ""; position: absolute; left: 11px; top: 8px; bottom: 8px; width: 2px; background: var(--line); }
+  .tl-item { position: relative; padding: 0 0 20px 36px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-dot {
+    position: absolute; left: 3px; top: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--blue-500); border: 3px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .tl-dot.success { background: var(--green-500); }
+  .tl-dot.fail { background: var(--red-600); }
+  .tl-dot.pending { background: var(--amber-500, #f59e0b); }
+  .tl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tl-type { font-weight: 750; font-size: 0.86rem; }
+  .tl-time { color: var(--muted); font-size: 0.74rem; margin-left: auto; }
+  .tl-msg { color: var(--ink-2); font-size: 0.83rem; margin-top: 3px; }
+  .tl-meta { color: var(--muted); font-size: 0.74rem; margin-top: 4px; overflow-wrap: anywhere; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .step { display: flex; gap: 11px; align-items: flex-start; }
+  .step-num {
+    flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--surface-3); color: var(--muted); border: 1px solid var(--line);
+    font-size: 0.72rem; font-weight: 800;
+  }
+  .step.done .step-num { background: var(--green-50); color: var(--green-700); border-color: var(--green-100); }
+  .step.current .step-num { background: var(--blue-600); color: #fff; border-color: var(--blue-700); }
+  .step.warn .step-num { background: var(--amber-50); color: var(--amber-800); border-color: var(--amber-100); }
+  .step-text { font-size: 0.84rem; color: var(--muted); }
+  .step.current .step-text { color: var(--ink); font-weight: 650; }
+  .step.done .step-text { color: var(--ink-2); }
+  .step-title { font-weight: 700; font-size: 0.84rem; color: inherit; }
+  .kv { display: grid; gap: 0; }
+  .kv-row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 0.83rem; }
+  .kv-row:last-child { border-bottom: 0; }
+  .kv-row span:first-child { color: var(--muted); }
+  .kv-row span:last-child { font-weight: 650; text-align: right; overflow-wrap: anywhere; }
+  .list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .list li { display: flex; gap: 9px; align-items: flex-start; font-size: 0.82rem; color: var(--ink-2); }
+  .list li::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--blue-500); margin-top: 7px; }
+  .list.check li::before { border-radius: 2px; background: var(--green-600); }
+  .list.warn li::before { background: var(--amber-600); }
+  .list.fail li::before { background: var(--red-600); }
+  .example-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .example {
+    border: 1px dashed var(--line-strong); background: var(--surface-2); color: var(--muted);
+    border-radius: 999px; padding: 4px 10px; font-size: 0.72rem; font-weight: 600;
+  }
+  .example:hover { border-color: var(--blue-500); color: var(--blue-700); background: var(--blue-50); }
+  .mono-block {
+    font-family: var(--mono); font-size: 0.78rem; line-height: 1.6;
+    background: var(--navy-950); color: #cfe0f7;
+    border-radius: 12px; padding: 14px 16px;
+    overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+    margin: 0;
+  }
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 120;
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
+    background: rgba(6, 11, 21, 0.58);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    width: min(580px, 100%);
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: modalIn 0.18s ease both;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(0.99); } to { opacity: 1; transform: none; } }
+  .modal-head { padding: 20px 22px 16px; border-bottom: 1px solid var(--line); }
+  .modal-title { font-size: 1.08rem; font-weight: 800; letter-spacing: -0.02em; }
+  .modal-sub { color: var(--muted); font-size: 0.8rem; margin-top: 4px; }
+  .modal-body { padding: 20px 22px; max-height: 62vh; overflow-y: auto; }
+  .modal-foot { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; padding: 15px 22px; border-top: 1px solid var(--line); background: var(--surface-2); }
+  .toast-stack { position: fixed; right: 20px; bottom: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; width: min(380px, calc(100vw - 40px)); }
+  .toast {
+    background: var(--navy-900); color: #e9f1fb;
+    border-radius: 12px; padding: 12px 14px 12px 16px;
+    box-shadow: var(--shadow-lg);
+    border-left: 4px solid var(--blue-500);
+    font-size: 0.84rem; line-height: 1.45;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    animation: toastIn 0.18s ease both;
+  }
+  .toast.success { border-left-color: var(--green-500); }
+  .toast.fail { border-left-color: #ef4444; }
+  .toast.warn { border-left-color: #f59e0b; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .mobile-nav { display: none; }
+  .mobile-overlay { display: none; }
+  .app.sidebar-collapsed .sidebar { width: var(--sidebar-w-collapsed); }
+  .app.sidebar-collapsed .main { margin-left: var(--sidebar-w-collapsed); }
+  .app.sidebar-collapsed .brand-text,
+  .app.sidebar-collapsed .nav-text,
+  .app.sidebar-collapsed .nav-label,
+  .app.sidebar-collapsed .sidebar-foot .foot-text { display: none; }
+  .app.sidebar-collapsed .sidebar-head { justify-content: center; padding-left: 10px; padding-right: 10px; }
+  .app.sidebar-collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+  .app.sidebar-collapsed .sidebar-foot { justify-items: center; }
+  .toast-stack { pointer-events: none; }
+  .toast-stack .toast { pointer-events: auto; }
+  @media (max-width: 1160px) {
+    .grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero { grid-template-columns: 1fr; }
+    .payment-layout { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 1024px) {
+    .sidebar { transform: translateX(-100%); width: var(--sidebar-w); box-shadow: none; }
+    .app.mobile-open .sidebar { transform: none; box-shadow: var(--shadow-lg); }
+    .app.sidebar-collapsed .sidebar { width: var(--sidebar-w); }
+    .app.sidebar-collapsed .brand-text,
+    .app.sidebar-collapsed .nav-text,
+    .app.sidebar-collapsed .nav-label,
+    .app.sidebar-collapsed .sidebar-foot .foot-text { display: block; }
+    .app.sidebar-collapsed .nav-item { justify-content: flex-start; padding-left: 12px; padding-right: 12px; }
+    .main, .app.sidebar-collapsed .main { margin-left: 0; }
+    .mobile-overlay {
+      display: block; position: fixed; inset: 0; z-index: 50;
+      background: rgba(6, 11, 21, 0.5);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .app.mobile-open .mobile-overlay { opacity: 1; pointer-events: auto; }
+    .topbar { padding: 12px 18px; }
+    .content { padding: 20px 18px 84px; }
+    .mobile-nav {
+      display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--line);
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+      justify-content: space-around;
+    }
+    .mobile-nav-item {
+      flex: 1; display: grid; justify-items: center; gap: 3px;
+      border: 0; background: transparent; color: var(--muted);
+      font-size: 0.64rem; font-weight: 700; padding: 6px 2px; border-radius: 8px;
+    }
+    .mobile-nav-item .nav-ico { width: 19px; height: 19px; }
+    .mobile-nav-item[aria-current="page"] { color: var(--blue-700); background: var(--blue-50); }
+    .topbar-sub { display: none; }
+  }
+  @media (max-width: 760px) {
+    .grid.cols-2 { grid-template-columns: 1fr; }
+    .page-head h1 { font-size: 1.4rem; }
+    .hero { padding: 22px; }
+    .hero h1 { font-size: 1.62rem; }
+    .topbar-chips #chip-auth,
+    .topbar-chips #chip-network { display: none; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .detail { border-right: 0; }
+    table.data { min-width: 0; }
+    .tx-table { display: none; }
+    .tx-cards { display: grid; gap: 12px; }
+    .toast-stack { right: 12px; bottom: 76px; width: calc(100vw - 24px); }
+    .modal-foot .btn { flex: 1; }
+  }
+  @media (max-width: 430px) {
+    .content { padding: 16px 14px 84px; }
+    .card-body { padding: 16px; }
+    .card-head { padding: 15px 16px; }
+    .kpi-value { font-size: 1.65rem; }
+    .hero-actions .btn { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    html { scroll-behavior: auto; }
+  }
 </style>
 </head>
 <body>
-<h1>Oracle69 AgentPay</h1>
-<p><em>AI proposes. Policy governs. Humans authorize. Blockchain settles.</em></p>
-<p><span class="badge">Monad Testnet · chain 10143 · native MON only</span> <span class="badge" id="provider-badge">PayPal mode: loading…</span></p>
-<div class="warn"><strong>This Monad Testnet preflight demo does not execute payments on-chain.</strong> It runs read-only checks (policy, approval, network, fees, balance) and displays the result. Nothing on Monad is signed, submitted, or settled here. The separate PayPal section below uses the PayPal Sandbox when configured; simulated mode is always labelled.</div>
+<div id="app" class="app">
+  <div id="mobile-overlay" class="mobile-overlay" aria-hidden="true"></div>
+  <aside id="sidebar" class="sidebar" aria-label="Primary navigation">
+    <div class="sidebar-head">
+      <div class="brand-mark" aria-hidden="true">O69</div>
+      <div class="brand-text">
+        <div class="brand-name">Oracle69</div>
+        <div class="brand-sub">AgentPay Console</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" aria-label="Console sections">
+      <div class="nav-label">Operations</div>
+      <button class="nav-item" type="button" data-goto="overview" aria-current="page">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.6"></rect><rect x="14" y="3" width="7" height="7" rx="1.6"></rect><rect x="3" y="14" width="7" height="7" rx="1.6"></rect><rect x="14" y="14" width="7" height="7" rx="1.6"></rect></svg>
+        <span class="nav-text">Overview</span>
+      </button>
+      <button class="nav-item" type="button" data-goto="payment">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.4"></rect><path d="M2.5 10h19"></path><path d="M6.5 15h4"></path></svg>
+        <span class="nav-text">New payment</span>
+      </button>
+      <button class="nav-item" type="button" data-goto="transactions">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h10"></path></svg>
+        <span class="nav-text">Transactions</span>
+      </button>
+      <button class="nav-item" type="button" data-goto="audit">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.4-2.9 7.6-7 9-4.1-1.4-7-4.6-7-9V6l7-3z"></path><path d="M9.2 12.2l2 2 3.6-3.8"></path></svg>
+        <span class="nav-text">Audit trail</span>
+      </button>
+      <div class="nav-label">Preflight</div>
+      <button class="nav-item" type="button" data-goto="monad">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3l-2.8 2.8"></path></svg>
+        <span class="nav-text">Monad preview</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="foot-row"><span class="dot" id="foot-provider-dot"></span><span class="foot-text" id="foot-provider">Provider: checking…</span></div>
+      <div class="foot-row"><span class="dot warn" id="foot-auth-dot"></span><span class="foot-text" id="foot-auth">Operator auth: checking…</span></div>
+      <div class="foot-row"><span class="dot" style="background:#3b82f6"></span><span class="foot-text">Monad Testnet · read-only</span></div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button id="sidebar-toggle" class="icon-btn" type="button" aria-label="Toggle navigation" aria-controls="sidebar" aria-expanded="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+      <div class="topbar-heading">
+        <div class="topbar-title" id="page-title">Overview</div>
+        <div class="topbar-sub">Oracle69 AgentPay · policy-controlled payment operations</div>
+      </div>
+      <div class="topbar-chips">
+        <span id="chip-provider"></span>
+        <span id="chip-auth"></span>
+        <span id="chip-network"></span>
+      </div>
+    </header>
+    <main class="content" id="main-content">
+      <section id="view-overview" class="view active" aria-labelledby="overview-title">
+        <div class="hero">
+          <div>
+            <span class="eyebrow">Payment Operations Console</span>
+            <h1 id="overview-title">Oracle69 AgentPay</h1>
+            <p class="hero-tag">AI proposes. Policy governs. Humans authorize. Blockchain settles.</p>
+            <p class="hero-sub">A policy-controlled PayPal Sandbox workflow with deterministic spending checks, explicit operator approval, independent capture verification, and an append-only audit trail. The Monad Testnet preflight is a separate read-only surface.</p>
+            <div class="hero-actions">
+              <button class="btn primary" type="button" data-goto="payment">Start a PayPal payment</button>
+              <button class="btn dark" type="button" data-goto="monad">Run Monad preview</button>
+            </div>
+          </div>
+          <div class="hero-badges" aria-label="Platform constraints">
+            <div class="hero-badge"><span class="dot green"></span><span>USD only · maximum $10.00 per payment</span></div>
+            <div class="hero-badge"><span class="dot amber"></span><span>Human approval required before capture</span></div>
+            <div class="hero-badge"><span class="dot blue"></span><span>Monad Testnet · chain 10143 · read-only preview</span></div>
+          </div>
+        </div>
 
-<div class="paypal-box" id="paypal-section">
-  <h2>PayPal Payment</h2>
-  <div id="simulation-banner" class="sim" style="display:none;">SIMULATION MODE — no real PayPal payment is created, approved, or captured.</div>
-  <div id="step-indicator">
-  <!-- AI mode state -->
-  <div id="ai-mode-state" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; border: 1px solid currentColor; border-radius: 8px; font-size: 0.85rem; display: none; color: #059669;">
-    <span class="badge" id="ai-badge"></span> AI mode active
-  </div>
-    <span class="step-badge step-active" id="step-1">1. Instruction</span>
-    <span class="step-badge" id="step-2">2. Details</span>
-    <span class="step-badge" id="step-3">3. Policy</span>
-    <span class="step-badge" id="step-4">4. Initiate</span>
-    <span class="step-badge" id="step-5">5. Approval</span>
-    <span class="step-badge" id="step-6">6. Capture</span>
-    <span class="step-badge" id="step-7">7. Status</span>
-  </div>
+        <div id="overview-kpis" class="grid cols-4 mt-18" aria-label="Session metrics">
+          <div class="card kpi">
+            <div class="kpi-label">Session payments</div>
+            <div class="kpi-value" id="kpi-session">0</div>
+            <div class="kpi-meta">Records created in this browser session</div>
+          </div>
+          <div class="card kpi success">
+            <div class="kpi-label">Verified captures</div>
+            <div class="kpi-value" id="kpi-verified">0</div>
+            <div class="kpi-meta">Provider-confirmed captures only</div>
+          </div>
+          <div class="card kpi pending">
+            <div class="kpi-label">Awaiting approval</div>
+            <div class="kpi-value" id="kpi-pending">0</div>
+            <div class="kpi-meta">Orders created or approved, not captured</div>
+          </div>
+          <div class="card kpi fail">
+            <div class="kpi-label">Needs attention</div>
+            <div class="kpi-value" id="kpi-attention">0</div>
+            <div class="kpi-meta">Failed, voided, stale, or unknown states</div>
+          </div>
+        </div>
 
-  <div id="step-1-panel" style="margin-top: 1rem;">
-    <label for="paypal-instruction">Natural-language payment instruction</label>
-    <textarea id="paypal-instruction" rows="3" placeholder="e.g. Pay $10.00 USD to merchant@example.com for invoice INV-001"></textarea>
-    <label for="operator-token">Operator token (optional — only if the server requires one)</label>
-    <input id="operator-token" type="password" autocomplete="off" placeholder="Leave empty for the local demo">
-    <button id="process-btn">Extract Payment Details</button>
-  </div>
+        <div class="grid cols-2 mt-18">
+          <div class="card" id="system-status">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">System status</h2>
+                <p class="card-sub">Live values from the server health endpoint and fixed protocol constraints.</p>
+              </div>
+              <span class="chip info"><span class="dot"></span>LIVE</span>
+            </div>
+            <div class="card-body tight">
+              <div class="kv">
+                <div class="kv-row"><span>PayPal provider</span><span id="sys-provider"><span class="chip neutral"><span class="dot"></span>Checking…</span></span></div>
+                <div class="kv-row"><span>Operator authentication</span><span id="sys-auth"><span class="chip neutral"><span class="dot"></span>Checking…</span></span></div>
+                <div class="kv-row"><span>Payment network</span><span><span class="chip info"><span class="dot"></span>PayPal Sandbox</span></span></div>
+                <div class="kv-row"><span>Currency and ceiling</span><span><span class="chip neutral"><span class="dot"></span>USD · $10.00 max</span></span></div>
+                <div class="kv-row"><span>Human approval</span><span><span class="chip pending"><span class="dot"></span>Required</span></span></div>
+                <div class="kv-row"><span>Capture verification</span><span><span class="chip info"><span class="dot"></span>Independent</span></span></div>
+                <div class="kv-row"><span>Monad Testnet preview</span><span><span class="chip neutral"><span class="dot"></span>Read-only · chain 10143</span></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="card" id="invariants">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Safety boundaries</h2>
+                <p class="card-sub">Controls enforced by the server, not by this interface.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <ul class="list check">
+                <li>AI interpretation is advisory only. It never authorizes, approves, initiates, or captures a payment.</li>
+                <li>Deterministic policy is authoritative: currency, ceiling, allowlist, expiry, and approval rules are re-evaluated by the server.</li>
+                <li>Operator approval is explicit and recorded before capture. A browser click alone is never treated as approval.</li>
+                <li>Capture is verified independently against provider evidence before it is recorded as successful.</li>
+                <li>UNKNOWN states fail closed. They are never silently retried or converted into success.</li>
+                <li>Audit events are append-only and retrieved through an authenticated endpoint.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
-  <div id="step-2-panel" style="display: none; margin-top: 1rem;">
-    <h3>Extracted Payment Details</h3>
-    <p><strong>Amount:</strong> $<span id="extracted-amount">—</span> <span id="extracted-currency">USD</span></p>
-    <p><strong>Receiver:</strong> <span id="extracted-receiver">—</span></p>
-    <p><strong>Purpose:</strong> <span id="extracted-purpose">—</span></p>
-    <p><strong>Request ID:</strong> <span id="extracted-requestid">—</span></p>
-    <div id="ai-extraction-info" style="margin-top: 0.5rem; padding: 0.25rem; border: 1px solid currentColor; border-radius: 8px;">
-      <span class="badge" id="ai-badge"></span> <span id="ai-desc" class="muted"></span>
+        <div class="card mt-18">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">Recent session activity</h2>
+              <p class="card-sub">Session-only records from live backend responses. No fabricated statistics or history.</p>
+            </div>
+            <button class="btn sm" type="button" data-goto="transactions">View all transactions</button>
+          </div>
+          <div class="card-body" id="recent-activity">
+            <div class="empty">
+              <div class="empty-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v13H4z"></path><path d="M8 7V4h8v3"></path><path d="M4 12h16"></path></svg>
+              </div>
+              <strong>No payments in this session yet</strong>
+              <p>Start a PayPal payment to populate session activity. The server does not expose a transaction list, so this console never invents one.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-payment" class="view" aria-labelledby="payment-title">
+        <div class="page-head">
+          <div>
+            <span class="eyebrow">Create Payment</span>
+            <h1 id="payment-title">New PayPal payment</h1>
+            <p class="page-sub">Describe the payment, review the deterministic policy decision, then complete human approval and capture as separate confirmed steps.</p>
+          </div>
+          <div class="topbar-chips">
+            <span id="chip-payment-mode" class="chip neutral"><span class="dot"></span>Provider loading</span>
+            <span class="chip neutral"><span class="dot"></span>USD · $10.00 max</span>
+          </div>
+        </div>
+
+        <div id="simulation-banner" class="banner warn" hidden>
+          <svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3L12 3z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg>
+          <div><strong>SIMULATION MODE.</strong> The mock provider is active. No real PayPal payment is created, approved, or captured, and no funds move.</div>
+        </div>
+
+        <div id="payment-error" class="banner danger mt-18" hidden role="alert">
+          <svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16h.01"></path></svg>
+          <div id="payment-error-text"></div>
+        </div>
+
+        <div class="payment-layout mt-18">
+          <div class="stack">
+            <div class="card" id="create-payment-card">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Payment instruction</h2>
+                  <p class="card-sub">Natural language is parsed deterministically first. The AI panel below is advisory and cannot change the authoritative request.</p>
+                </div>
+                <span class="chip info"><span class="dot"></span>STEP 1</span>
+              </div>
+              <div class="card-body">
+                <div class="field">
+                  <label class="field-label" for="paypal-instruction">Instruction <span class="required" aria-hidden="true">*</span></label>
+                  <textarea id="paypal-instruction" class="input" rows="4" maxlength="2000" autocomplete="off" spellcheck="false" placeholder="e.g. Pay $10.00 USD to merchant@example.com for invoice INV-001" aria-describedby="instruction-hint"></textarea>
+                  <p class="hint" id="instruction-hint">Include the amount, USD, the PayPal receiver, and a purpose. The server rejects anything above $10.00 with a structured policy reason.</p>
+                  <div class="example-row" aria-label="Example instructions">
+                    <button class="example" type="button" data-example="Pay $10.00 USD to merchant@example.com for invoice INV-001">Invoice example</button>
+                    <button class="example" type="button" data-example="Pay 5.50 USD to billing@acme.test for API usage in October">Billing example</button>
+                    <button class="example" type="button" data-example="Pay 12.00 USD to merchant@example.com for annual renewal">Over-limit example</button>
+                  </div>
+                </div>
+                <div class="field" id="operator-auth">
+                  <label class="field-label" for="operator-token">Operator token <span class="required" id="token-required-mark" aria-hidden="true">*</span></label>
+                  <input id="operator-token" class="input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste the operator token" aria-describedby="token-hint">
+                  <p class="hint" id="token-hint">Operator authentication is <strong id="token-requirement-text">REQUIRED</strong> for creating, approving, and capturing payments and for reading audit trails. The token is held in this page only, sent as a request header, and never saved or logged.</p>
+                  <p class="hint" id="token-status" aria-live="polite"></p>
+                </div>
+                <button id="analyze-btn" class="btn primary" type="button">Analyze &amp; evaluate policy</button>
+              </div>
+            </div>
+
+            <div class="card" id="ai-interpretation">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">AI interpretation</h2>
+                  <p class="card-sub">Displayed for transparency only. The deterministic parser supplies the values used for execution.</p>
+                </div>
+                <span class="chip info"><span class="dot"></span>ADVISORY ONLY</span>
+              </div>
+              <div class="card-body" id="ai-body">
+                <div class="empty">
+                  <div class="empty-ico" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"></path><path d="M19 16l.9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16z"></path></svg>
+                  </div>
+                  <strong>No interpretation yet</strong>
+                  <p>Analyze an instruction to compare the advisory AI interpretation with the authoritative deterministic extraction.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" id="policy-review">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Policy review</h2>
+                  <p class="card-sub">Deterministic decision from the server. A passing spend check is not authorization to capture.</p>
+                </div>
+                <span class="chip neutral"><span class="dot"></span>DETERMINISTIC</span>
+              </div>
+              <div class="card-body" id="policy-body">
+                <div class="empty">
+                  <div class="empty-ico" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.4-2.9 7.6-7 9-4.1-1.4-7-4.6-7-9V6l7-3z"></path><path d="M9.2 12.2l2 2 3.6-3.8"></path></svg>
+                  </div>
+                  <strong>No policy decision yet</strong>
+                  <p>Analyze an instruction to run the deterministic spending policy. Blocking reasons and required approval will appear here.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" id="human-approval">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Human approval</h2>
+                  <p class="card-sub">Creating an order, verifying buyer approval, and capturing are separate explicit actions.</p>
+                </div>
+                <span class="chip pending"><span class="dot"></span>REQUIRED</span>
+              </div>
+              <div class="card-body">
+                <div id="approval-empty" class="empty">
+                  <div class="empty-ico" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 100 8 4 4 0 000-8z"></path><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"></path></svg>
+                  </div>
+                  <strong>Waiting for an approved policy decision</strong>
+                  <p>After the deterministic checks pass, you can create a PayPal Sandbox order and verify the buyer approval with the server.</p>
+                </div>
+                <div id="approval-panel" hidden>
+                  <div id="approval-status"></div>
+                  <div class="divider"></div>
+                  <button id="create-order-btn" class="btn primary" type="button" disabled>Create PayPal order</button>
+                  <div id="order-actions" class="mt-18" hidden>
+                    <dl class="detail-grid" id="order-details"></dl>
+                    <div class="divider"></div>
+                    <div class="hero-actions" style="margin-top:0">
+                      <button id="open-approval-btn" class="btn dark" type="button" disabled>Open PayPal Sandbox approval</button>
+                      <button id="verify-approval-btn" class="btn" type="button" disabled>I approved in PayPal — verify</button>
+                    </div>
+                    <p class="hint" id="approval-hint">The server confirms the approval directly with PayPal. A browser click alone cannot mark a payment approved.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" id="paypal-execution">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">PayPal execution</h2>
+                  <p class="card-sub">Capture is requested once, then verified against provider evidence. UNKNOWN is terminal until reconciled.</p>
+                </div>
+                <span class="chip info"><span class="dot"></span>VERIFIED PATH</span>
+              </div>
+              <div class="card-body">
+                <div id="execution-empty" class="empty">
+                  <div class="empty-ico" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-12 2 6h6"></path></svg>
+                  </div>
+                  <strong>No execution yet</strong>
+                  <p>Capture becomes available only after the server has verified operator approval. The interface never auto-retries an UNKNOWN result.</p>
+                </div>
+                <div id="execution-panel" hidden>
+                  <div id="execution-status"></div>
+                  <dl class="detail-grid mt-18" id="execution-details"></dl>
+                  <div class="divider"></div>
+                  <div class="hero-actions" style="margin-top:0">
+                    <button id="capture-btn" class="btn success" type="button" disabled>Capture payment</button>
+                    <button id="refresh-status-btn" class="btn" type="button">Refresh status</button>
+                    <button id="reset-payment-btn" class="btn ghost" type="button">Start another payment</button>
+                  </div>
+                  <p class="hint" id="capture-status" aria-live="polite"></p>
+                  <div class="divider"></div>
+                  <h3 class="card-title" style="font-size:0.9rem">Recent audit events</h3>
+                  <div id="payment-audit" class="mt-18"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="stack">
+            <div class="card" id="payment-summary">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Current request</h2>
+                  <p class="card-sub">Authoritative deterministic values.</p>
+                </div>
+                <span id="sum-state" class="chip neutral"><span class="dot"></span>Idle</span>
+              </div>
+              <div class="card-body tight">
+                <div class="kv">
+                  <div class="kv-row"><span>Amount</span><span class="mono" id="sum-amount">—</span></div>
+                  <div class="kv-row"><span>Currency</span><span id="sum-currency">—</span></div>
+                  <div class="kv-row"><span>Receiver</span><span id="sum-receiver">—</span></div>
+                  <div class="kv-row"><span>Purpose</span><span id="sum-purpose">—</span></div>
+                  <div class="kv-row"><span>Request ID</span><span class="mono" id="sum-request">—</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card" id="flow-guide">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Approval flow</h2>
+                  <p class="card-sub">Each step is a server-enforced checkpoint.</p>
+                </div>
+              </div>
+              <div class="card-body">
+                <ol class="steps" id="flow-steps">
+                  <li class="step" data-step="analyze"><span class="step-num">1</span><span class="step-text"><span class="step-title">Analyze</span><br>Deterministic extraction and policy evaluation.</span></li>
+                  <li class="step" data-step="order"><span class="step-num">2</span><span class="step-text"><span class="step-title">Create order</span><br>Explicit confirmation creates a PayPal Sandbox order.</span></li>
+                  <li class="step" data-step="approve"><span class="step-num">3</span><span class="step-text"><span class="step-title">Verify buyer approval</span><br>The server confirms approval with PayPal.</span></li>
+                  <li class="step" data-step="capture"><span class="step-num">4</span><span class="step-text"><span class="step-title">Capture</span><br>Explicit confirmation, independent verification.</span></li>
+                </ol>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">What this console will not do</h2>
+                </div>
+              </div>
+              <div class="card-body">
+                <ul class="list warn">
+                  <li>Approve or capture automatically.</li>
+                  <li>Treat AI output as authorization.</li>
+                  <li>Retry an UNKNOWN capture state.</li>
+                  <li>Store the operator token or log payment secrets.</li>
+                  <li>Create history records that the server did not return.</li>
+                </ul>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section id="view-transactions" class="view" aria-labelledby="transactions-title">
+        <div class="page-head">
+          <div>
+            <span class="eyebrow">Transaction History</span>
+            <h1 id="transactions-title">Session transactions</h1>
+            <p class="page-sub">Only payments created in this browser session. The backend exposes individual payment lookups but no list endpoint, so this view never fabricates history.</p>
+          </div>
+          <div class="topbar-chips">
+            <span id="tx-count-chip" class="chip neutral"><span class="dot"></span>0 records</span>
+            <button id="clear-session-btn" class="btn sm" type="button" disabled>Clear session</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">Live payment records</h2>
+              <p class="card-sub">State and verification values come from the server response. Refresh a record to re-check its current status.</p>
+            </div>
+            <button class="btn sm" type="button" data-goto="payment">New payment</button>
+          </div>
+          <div class="card-body">
+            <div id="transactions-empty" class="empty">
+              <div class="empty-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h10"></path></svg>
+              </div>
+              <strong>No transactions in this session</strong>
+              <p>Create a PayPal payment and its live record will appear here. Reloading the page clears this session-only view.</p>
+            </div>
+            <div id="transactions-list" hidden>
+              <div class="table-wrap tx-table">
+                <table class="data" aria-label="Session payment records">
+                  <thead>
+                    <tr>
+                      <th scope="col">Status</th>
+                      <th scope="col">Request ID</th>
+                      <th scope="col">Receiver</th>
+                      <th scope="col">Amount</th>
+                      <th scope="col">Capture verified</th>
+                      <th scope="col">Created</th>
+                      <th scope="col"><span class="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tx-tbody"></tbody>
+                </table>
+              </div>
+              <div id="transactions-cards" class="tx-cards"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-audit" class="view" aria-labelledby="audit-title">
+        <div class="page-head">
+          <div>
+            <span class="eyebrow">Audit Trail</span>
+            <h1 id="audit-title">Append-only audit events</h1>
+            <p class="page-sub">Audit retrieval is authenticated by the operator token. Events are read directly from the server and are never synthesized by the interface.</p>
+          </div>
+          <span class="chip pending"><span class="dot"></span>TOKEN REQUIRED</span>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">Load an audit trail</h2>
+              <p class="card-sub">Choose a session payment or enter a payment ID. The token field on the New payment view is used for this request.</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid cols-2">
+              <div class="field">
+                <label class="field-label" for="audit-payment-select">Session payment</label>
+                <select id="audit-payment-select" class="input">
+                  <option value="">Select a session payment…</option>
+                </select>
+                <p class="hint">Session records only. This dropdown is cleared on reload.</p>
+              </div>
+              <div class="field">
+                <label class="field-label" for="audit-payment-id">Payment / request ID</label>
+                <input id="audit-payment-id" class="input mono" autocomplete="off" spellcheck="false" placeholder="req_…">
+                <p class="hint">The audit endpoint requires the operator token to be present above.</p>
+              </div>
+            </div>
+            <button id="load-audit-btn" class="btn primary" type="button">Load audit trail</button>
+          </div>
+        </div>
+        <div class="card mt-18" id="audit-trail-card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">Audit events</h2>
+              <p class="card-sub" id="audit-trail-sub">No audit trail loaded.</p>
+            </div>
+            <span id="audit-trail-state" class="chip neutral"><span class="dot"></span>Idle</span>
+          </div>
+          <div class="card-body" id="audit-trail">
+            <div class="empty">
+              <div class="empty-ico" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.4-2.9 7.6-7 9-4.1-1.4-7-4.6-7-9V6l7-3z"></path><path d="M9.2 12.2l2 2 3.6-3.8"></path></svg>
+              </div>
+              <strong>No audit events loaded</strong>
+              <p>Select a payment and load its audit trail. Audit events are append-only records written by the server.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-monad" class="view" aria-labelledby="monad-title">
+        <div class="page-head">
+          <div>
+            <span class="eyebrow">Monad Preview</span>
+            <h1 id="monad-title">Read-only Monad Testnet preflight</h1>
+            <p class="page-sub">A separate, informational preflight surface. It checks policy, approval, network, fees, and balance without signing, submitting, or settling anything.</p>
+          </div>
+          <span class="chip fail"><span class="dot"></span>READ-ONLY TESTNET PREVIEW</span>
+        </div>
+        <div class="banner warn">
+          <svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3L12 3z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg>
+          <div><strong>This Monad Testnet preflight does not execute payments on-chain.</strong> Nothing is signed, broadcast, or settled. The PayPal Sandbox workflow above is a separate surface with separate state; the two are not connected.</div>
+        </div>
+        <div id="simulation-banner-monad" class="banner info mt-18">
+          <svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 8h.01"></path></svg>
+          <div>Network: <strong>Monad Testnet</strong> · chain 10143 · native MON only · maximum 1 MON per preview. Informational only.</div>
+        </div>
+        <div class="grid cols-2 mt-18">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Preview parameters</h2>
+                <p class="card-sub">All execution fields are fixed by the server. Only the amount, optional request ID, and optional approval proof are supplied here.</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <form id="preview-form" novalidate>
+                <div class="field">
+                  <label class="field-label" for="amount">Amount (MON, decimal, max 1)</label>
+                  <input id="amount" class="input" name="amount" inputmode="decimal" autocomplete="off" placeholder="0.001" value="0.001">
+                </div>
+                <div class="field">
+                  <label class="field-label" for="requestId">Request ID <span class="hint" style="display:inline;margin:0">(optional)</span></label>
+                  <input id="requestId" class="input mono" name="requestId" autocomplete="off" spellcheck="false" placeholder="Generated if empty">
+                </div>
+                <div class="field">
+                  <label class="field-label" for="proof">Approval proof JSON <span class="hint" style="display:inline;margin:0">(optional)</span></label>
+                  <textarea id="proof" class="input mono" name="proof" spellcheck="false" placeholder='{"signature":"0x…","domainId":"…","policyVersion":"…","policyDigest":"0x…"}'></textarea>
+                  <p class="hint">Leave empty to preview without an approval proof. A proof never authorizes a broadcast.</p>
+                </div>
+                <button type="submit" class="btn primary">Run read-only preview</button>
+              </form>
+            </div>
+          </div>
+          <div class="card" id="monad-preview">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Preflight result</h2>
+                <p class="card-sub">Informational output only. Never authorization to execute.</p>
+              </div>
+              <span class="chip neutral"><span class="dot"></span>NO BROADCAST</span>
+            </div>
+            <div class="card-body">
+              <div id="monad-result-banner" class="banner neutral">
+                <svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 8h.01"></path></svg>
+                <div id="monad-status">No preview run yet.</div>
+              </div>
+              <div id="monad-summary" class="mt-18"></div>
+              <details id="monad-raw-wrap" class="mt-18">
+                <summary class="hint" style="cursor:pointer;font-weight:700;color:var(--ink-2)">Raw response</summary>
+                <pre id="monad-result" class="mono-block mt-18">—</pre>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation">
+  <button class="mobile-nav-item" type="button" data-goto="overview" aria-current="page">
+    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.6"></rect><rect x="14" y="3" width="7" height="7" rx="1.6"></rect><rect x="3" y="14" width="7" height="7" rx="1.6"></rect><rect x="14" y="14" width="7" height="7" rx="1.6"></rect></svg>
+    <span>Home</span>
+  </button>
+  <button class="mobile-nav-item" type="button" data-goto="payment">
+    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.4"></rect><path d="M2.5 10h19"></path><path d="M6.5 15h4"></path></svg>
+    <span>Pay</span>
+  </button>
+  <button class="mobile-nav-item" type="button" data-goto="transactions">
+    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h10"></path></svg>
+    <span>History</span>
+  </button>
+  <button class="mobile-nav-item" type="button" data-goto="monad">
+    <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M19.1 4.9l-2.8 2.8M7.7 16.3l-2.8 2.8"></path></svg>
+    <span>Preview</span>
+  </button>
+</nav>
+<div id="modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-sub" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 class="modal-title" id="modal-title">Confirm</h2>
+      <p class="modal-sub" id="modal-sub"></p>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="modal-cancel">Cancel</button>
+      <button type="button" class="btn primary" id="modal-confirm">Confirm</button>
     </div>
   </div>
-
-  <div id="step-3-panel" style="display: none; margin-top: 1rem;">
-    <h3>Policy Decision</h3>
-    <p id="policy-result">—</p>
-    <button id="initiate-btn" style="width: auto;">Initiate PayPal Payment</button>
-  </div>
-
-  <div id="step-4-panel" style="display: none; margin-top: 1rem;">
-    <h3>PayPal Sandbox Approval</h3>
-    <p><strong>PayPal order:</strong> <span id="paypal-order-id">—</span></p>
-    <p class="muted">Open PayPal Sandbox, sign in as the sandbox buyer, and approve the payment. Then return here.</p>
-    <button id="open-approval-btn">Open PayPal Sandbox Approval</button>
-    <p id="approval-status" class="muted"></p>
-  </div>
-
-  <div id="step-5-panel" style="display: none; margin-top: 1rem;">
-    <h3>Returned from PayPal</h3>
-    <p class="muted">The server will confirm the approval with PayPal before recording it. A browser click alone cannot mark a payment approved.</p>
-    <button id="confirm-approval-btn">I Approved in PayPal — Continue</button>
-    <p id="confirm-status" class="muted"></p>
-  </div>
-
-  <div id="step-6-panel" style="display: none; margin-top: 1rem;">
-    <h3>Complete Capture</h3>
-    <p class="muted">The server re-checks policy, amount, currency, and merchant before requesting capture.</p>
-    <button id="capture-btn">Complete Capture</button>
-    <p id="capture-status" class="muted"></p>
-  </div>
-
-  <div id="step-7-panel" style="display: none; margin-top: 1rem;">
-    <h3>Verified Payment Status</h3>
-    <pre id="payment-status">—</pre>
-    <h4>What happened</h4>
-    <pre id="payment-explanation">—</pre>
-    <h4>Transaction references</h4>
-    <pre id="payment-references">—</pre>
-    <button id="copy-references-btn" style="width: auto;">Copy References</button>
-    <h4>Audit trail</h4>
-    <pre id="payment-audit">—</pre>
-    <button id="reset-btn">Start New Payment</button>
-  </div>
-
-  <p id="paypal-error" class="error" style="margin-top: 1rem;"></p>
 </div>
-
-<form id="preview-form" style="margin-top: 2rem;">
-  <label for="amount">Amount (MON, decimal, max 1)</label>
-  <input id="amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="0.001" value="0.001">
-  <label for="requestId">Request ID (optional — generated if empty)</label>
-  <input id="requestId" name="requestId" autocomplete="off" placeholder="demo-req-1">
-  <label for="proof">Approval proof JSON (optional — leave empty to preview without approval)</label>
-  <textarea id="proof" name="proof" spellcheck="false" placeholder='{"signature":"0x…","domainId":"…","policyVersion":"…","policyDigest":"0x…"}'></textarea>
-  <button type="submit">Run read-only Monad preview</button>
-</form>
-
-<h2>Result</h2>
-<p id="status" class="ok">No preview run yet.</p>
-<pre id="result">—</pre>
-
+<div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
 <script>
 (function () {
   "use strict";
-  const PAYPAL_BASE = "/api/paypal";
-  const panels = {
-    1: document.getElementById("step-1-panel"),
-    2: document.getElementById("step-2-panel"),
-    3: document.getElementById("step-3-panel"),
-    4: document.getElementById("step-4-panel"),
-    5: document.getElementById("step-5-panel"),
-    6: document.getElementById("step-6-panel"),
-    7: document.getElementById("step-7-panel"),
+
+  const byId = (id) => document.getElementById(id);
+  const $$ = (selector, root) => Array.from((root || document).querySelectorAll(selector));
+  const ESCAPE_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  const esc = (value) => String(value === null || value === undefined ? "" : value).replace(/[&<>"']/g, (ch) => ESCAPE_MAP[ch]);
+
+  const els = {
+    app: byId("app"),
+    sidebar: byId("sidebar"),
+    mobileNav: byId("mobile-nav"),
+    sidebarToggle: byId("sidebar-toggle"),
+    mobileOverlay: byId("mobile-overlay"),
+    pageTitle: byId("page-title"),
+    chipProvider: byId("chip-provider"),
+    chipAuth: byId("chip-auth"),
+    chipNetwork: byId("chip-network"),
+    chipPaymentMode: byId("chip-payment-mode"),
+    footProvider: byId("foot-provider"),
+    footProviderDot: byId("foot-provider-dot"),
+    footAuth: byId("foot-auth"),
+    footAuthDot: byId("foot-auth-dot"),
+    simulationBanner: byId("simulation-banner"),
+    sysProvider: byId("sys-provider"),
+    sysAuth: byId("sys-auth"),
+    kpiSession: byId("kpi-session"),
+    kpiVerified: byId("kpi-verified"),
+    kpiPending: byId("kpi-pending"),
+    kpiAttention: byId("kpi-attention"),
+    recentActivity: byId("recent-activity"),
+    paymentError: byId("payment-error"),
+    paymentErrorText: byId("payment-error-text"),
+    instruction: byId("paypal-instruction"),
+    token: byId("operator-token"),
+    tokenRequiredMark: byId("token-required-mark"),
+    tokenRequirementText: byId("token-requirement-text"),
+    tokenStatus: byId("token-status"),
+    analyzeBtn: byId("analyze-btn"),
+    aiBody: byId("ai-body"),
+    policyBody: byId("policy-body"),
+    approvalEmpty: byId("approval-empty"),
+    approvalPanel: byId("approval-panel"),
+    approvalStatus: byId("approval-status"),
+    createOrderBtn: byId("create-order-btn"),
+    orderActions: byId("order-actions"),
+    orderDetails: byId("order-details"),
+    openApprovalBtn: byId("open-approval-btn"),
+    verifyApprovalBtn: byId("verify-approval-btn"),
+    approvalHint: byId("approval-hint"),
+    executionEmpty: byId("execution-empty"),
+    executionPanel: byId("execution-panel"),
+    executionStatus: byId("execution-status"),
+    executionDetails: byId("execution-details"),
+    captureBtn: byId("capture-btn"),
+    refreshStatusBtn: byId("refresh-status-btn"),
+    resetPaymentBtn: byId("reset-payment-btn"),
+    captureStatus: byId("capture-status"),
+    paymentAudit: byId("payment-audit"),
+    sumState: byId("sum-state"),
+    sumAmount: byId("sum-amount"),
+    sumCurrency: byId("sum-currency"),
+    sumReceiver: byId("sum-receiver"),
+    sumPurpose: byId("sum-purpose"),
+    sumRequest: byId("sum-request"),
+    flowSteps: byId("flow-steps"),
+    transactionsEmpty: byId("transactions-empty"),
+    transactionsList: byId("transactions-list"),
+    txTbody: byId("tx-tbody"),
+    transactionsCards: byId("transactions-cards"),
+    txCountChip: byId("tx-count-chip"),
+    clearSessionBtn: byId("clear-session-btn"),
+    auditSelect: byId("audit-payment-select"),
+    auditPaymentId: byId("audit-payment-id"),
+    loadAuditBtn: byId("load-audit-btn"),
+    auditTrail: byId("audit-trail"),
+    auditTrailSub: byId("audit-trail-sub"),
+    auditTrailState: byId("audit-trail-state"),
+    previewForm: byId("preview-form"),
+    monadStatus: byId("monad-status"),
+    monadResultBanner: byId("monad-result-banner"),
+    monadSummary: byId("monad-summary"),
+    monadResult: byId("monad-result"),
+    modalBackdrop: byId("modal-backdrop"),
+    modalTitle: byId("modal-title"),
+    modalSub: byId("modal-sub"),
+    modalBody: byId("modal-body"),
+    modalCancel: byId("modal-cancel"),
+    modalConfirm: byId("modal-confirm"),
+    toastStack: byId("toast-stack")
   };
-  const badges = Array.from(document.querySelectorAll("#step-indicator .step-badge"));
-  const providerBadge = document.getElementById("provider-badge");
-  const simulationBanner = document.getElementById("simulation-banner");
-  const instructionEl = document.getElementById("paypal-instruction");
-  const operatorTokenEl = document.getElementById("operator-token");
-  const processBtn = document.getElementById("process-btn");
-  const initiateBtn = document.getElementById("initiate-btn");
-  const openApprovalBtn = document.getElementById("open-approval-btn");
-  const confirmApprovalBtn = document.getElementById("confirm-approval-btn");
-  const captureBtn = document.getElementById("capture-btn");
-  const copyReferencesBtn = document.getElementById("copy-references-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const extractedAmount = document.getElementById("extracted-amount");
-  const extractedReceiver = document.getElementById("extracted-receiver");
-  const extractedCurrency = document.getElementById("extracted-currency");
-  const extractedPurpose = document.getElementById("extracted-purpose");
-  const extractedRequestId = document.getElementById("extracted-requestid");
-  const policyResult = document.getElementById("policy-result");
-  const paypalOrderIdEl = document.getElementById("paypal-order-id");
-  const approvalStatus = document.getElementById("approval-status");
-  const confirmStatus = document.getElementById("confirm-status");
-  const captureStatus = document.getElementById("capture-status");
-  const paymentStatusPre = document.getElementById("payment-status");
-  const paymentExplanationPre = document.getElementById("payment-explanation");
-  const paymentReferencesPre = document.getElementById("payment-references");
-  const paymentAuditPre = document.getElementById("payment-audit");
-  const paypalError = document.getElementById("paypal-error");
 
-  let extracted = null;
-  let payment = null;
-  let providerModeState = "mock";
-  let providerSimulatedState = true;
-  let operatorAuthState = "operator auth: unknown";
+  const state = {
+    view: "overview",
+    health: null,
+    healthError: false,
+    analysis: null,
+    ai: null,
+    order: null,
+    current: null,
+    payments: [],
+    captureUncertain: false,
+    captureUncertainMessage: "",
+    captureAlreadyCaptured: false,
+    lastFocus: null
+  };
 
-  function showStage(n) {
-    for (let i = 1; i <= 7; i += 1) {
-      panels[i].style.display = i <= n ? "block" : "none";
-    }
-    badges.forEach((badge, index) => badge.classList.toggle("step-active", index < n));
+  const VIEW_TITLES = {
+    overview: "Overview",
+    payment: "New payment",
+    transactions: "Transactions",
+    audit: "Audit trail",
+    monad: "Monad preview"
+  };
+
+  const STATE_LABELS = {
+    RESERVED: "Reserved",
+    ORDER_CREATED: "Order created",
+    APPROVED: "Approved",
+    CAPTURING: "Capturing",
+    CAPTURED: "Captured",
+    FAILED: "Failed",
+    VOIDED: "Voided",
+    STALE: "Stale",
+    UNKNOWN: "Unknown"
+  };
+
+  const ICON_EMPTY = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.4"></rect><path d="M3.5 9.5h17"></path></svg>';
+
+  function money(minor) {
+    const n = Number(minor);
+    if (!Number.isFinite(n)) return "—";
+    return "$" + (n / 100).toFixed(2);
   }
 
-  function setError(message) {
-    paypalError.textContent = message || "";
+  function usd(minor) {
+    const n = Number(minor);
+    if (!Number.isFinite(n)) return "—";
+    return (n / 100).toFixed(2);
   }
 
-  function renderProviderBadge() {
-    const mode = providerModeState === "mock" ? "PayPal mode: SIMULATED (mock)" : "PayPal mode: Sandbox";
-    providerBadge.textContent = `${mode} · ${operatorAuthState}`;
-    simulationBanner.style.display = providerSimulatedState ? "block" : "none";
+  function shortId(value, max) {
+    const limit = max || 18;
+    const text = value === null || value === undefined ? "" : String(value);
+    if (!text) return "—";
+    return text.length > limit ? text.slice(0, limit) + "…" : text;
   }
 
-  function setProviderMode(mode, simulated) {
-    providerModeState = mode;
-    providerSimulatedState = Boolean(simulated);
-    renderProviderBadge();
-  }
-
-  function setOperatorAuth(authMode, required) {
-    operatorAuthState = required || authMode === "operator-token"
-      ? "operator auth: required"
-      : "operator auth: OPEN (local demo)";
-    renderProviderBadge();
-  }
-
-  function authHeaders() {
-    const token = operatorTokenEl.value.trim();
-    return token ? { "x-agentpay-operator-token": token } : {};
-  }
-
-  async function request(path, options) {
-    const init = {
-      credentials: "same-origin",
-      ...options,
-      headers: { "content-type": "application/json", ...authHeaders(), ...(options && options.headers ? options.headers : {}) },
-    };
-    const response = await fetch(`${PAYPAL_BASE}${path}`, init);
-    let data = null;
-    try { data = await response.json(); } catch (e) { data = null; }
-    return { status: response.status, ok: response.ok, data: data || {} };
-  }
-
-  function formatMoney(amountMinor) {
-    return (Number(amountMinor) / 100).toFixed(2);
-  }
-
-  function renderStatus(data) {
-    const modeLabel = data.simulated
-      ? "MOCK — SIMULATED, NOT A REAL PAYPAL PAYMENT"
-      : "PAYPAL SANDBOX — real sandbox provider evidence";
-    const lines = [
-      `State: ${data.state}`,
-      `Verified capture: ${data.verified ? "YES — provider-confirmed capture" : "NO"}`,
-      `Payment ID / request ID: ${data.paymentId || data.requestId || "—"}`,
-      `PayPal order ID: ${data.paypalOrderId || data.orderId || "—"}`,
-      `PayPal capture ID: ${data.paypalCaptureId || data.captureId || "—"}`,
-      `Receiver: ${data.receiver}`,
-      `Amount: $${formatMoney(data.amountMinor)} ${data.currency}`,
-      `Purpose: ${data.purpose || "—"}`,
-      `Provider mode: ${modeLabel}`,
-      `Created: ${data.createdAt ? new Date(data.createdAt * 1000).toISOString() : "—"}`,
-      `Capture verified: ${data.captureVerifiedAt ? new Date(data.captureVerifiedAt * 1000).toISOString() : "—"}`,
-      `Approval recorded: ${data.approvalVerifiedAt ? new Date(data.approvalVerifiedAt * 1000).toISOString() : "—"}`,
-    ];
-    paymentStatusPre.textContent = lines.join("\n");
-
-    const explanation = data.explanation;
-    if (explanation) {
-      const explanationLines = [
-        explanation.summary,
-        `Next step: ${explanation.nextStep}`,
-        ...(Array.isArray(explanation.details) ? explanation.details : []),
-      ];
-      paymentExplanationPre.textContent = explanationLines.join("\n");
-    } else {
-      paymentExplanationPre.textContent = "No explanation was returned by the server.";
-    }
-
-    const references = [
-      `internal request ID: ${data.requestId || "—"}`,
-      `internal payment ID: ${data.paymentId || "—"}`,
-      `PayPal order ID: ${data.paypalOrderId || data.orderId || "—"}`,
-      `PayPal capture ID: ${data.paypalCaptureId || data.captureId || "—"}`,
-      `amount: ${formatMoney(data.amountMinor)} ${data.currency}`,
-      `merchant: ${data.receiver || "—"}`,
-      `purpose: ${data.purpose || "—"}`,
-      `state: ${data.state || "—"}`,
-      `provider mode: ${data.providerMode || "—"}${data.simulated ? " (simulated)" : " (sandbox)"}`,
-    ];
-    paymentReferencesPre.textContent = references.join("\n");
-  }
-
-  async function loadAudit(paymentId) {
-    paymentAuditPre.textContent = "Loading audit trail…";
+  function fmtTime(seconds) {
+    const n = Number(seconds);
+    if (!Number.isFinite(n) || n <= 0) return "—";
     try {
-      const audit = await request(`/payment/${encodeURIComponent(paymentId)}/audit`, { method: "GET" });
-      if (!audit.ok) {
-        paymentAuditPre.textContent = audit.data.error || "Audit trail unavailable.";
-        return;
-      }
-      const events = Array.isArray(audit.data.audit) ? audit.data.audit : [];
-      paymentAuditPre.textContent = events.length === 0
-        ? "No audit events recorded."
-        : events.map((event) => {
-            const when = new Date(event.createdAt * 1000).toISOString();
-            const refs = [event.providerOrderId, event.captureId].filter(Boolean).join(" / ");
-            return `#${event.id} ${when} ${event.eventType} [${event.state}] ${event.message}${event.code ? " (" + event.code + ")" : ""}${refs ? " — " + refs : ""}`;
-          }).join("\n");
-    } catch (err) {
-      paymentAuditPre.textContent = err instanceof Error ? err.message : "Audit trail unavailable.";
+      return new Date(n * 1000).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    } catch {
+      return "—";
     }
   }
 
-  async function showFinalStatus(paymentId) {
-    const status = await request(`/payment/${encodeURIComponent(paymentId)}`, { method: "GET" });
-    if (status.ok) renderStatus(status.data);
-    await loadAudit(paymentId);
+  function chip(label, kind) {
+    return '<span class="chip ' + (kind || "neutral") + '"><span class="dot"></span>' + esc(label) + "</span>";
   }
 
-  processBtn.addEventListener("click", async () => {
-    setError("");
-    extracted = null;
-    payment = null;
-    const instruction = instructionEl.value.trim();
-    if (!instruction) {
-      setError("Enter a payment instruction first.");
+  function statusKind(value, verified) {
+    switch (value) {
+      case "CAPTURED":
+        return verified === true ? "success" : "warn";
+      case "ORDER_CREATED":
+      case "APPROVED":
+      case "CAPTURING":
+      case "RESERVED":
+        return "pending";
+      case "FAILED":
+      case "VOIDED":
+      case "STALE":
+        return "fail";
+      case "UNKNOWN":
+        return "unknown";
+      default:
+        return "neutral";
+    }
+  }
+
+  function statusLabel(value) {
+    return STATE_LABELS[value] || value || "Unknown";
+  }
+
+  function statusChip(value, verified) {
+    return chip(statusLabel(value), statusKind(value, verified === true));
+  }
+
+  function providerKind() {
+    if (!state.health) return "neutral";
+    return state.health.simulated === true || state.health.providerMode === "mock" ? "pending" : "success";
+  }
+
+  function providerText() {
+    if (!state.health) return "Checking…";
+    return state.health.simulated === true || state.health.providerMode === "mock" ? "SIMULATED (mock)" : "PayPal Sandbox";
+  }
+
+  function paymentIdOf(record) {
+    if (!record) return "";
+    return record.requestId || record.paymentId || "";
+  }
+
+  function emptyState(title, text) {
+    return '<div class="empty"><div class="empty-ico" aria-hidden="true">' + ICON_EMPTY + "</div><strong>" + esc(title) + "</strong><p>" + esc(text) + "</p></div>";
+  }
+
+  function toast(message, kind) {
+    const node = document.createElement("div");
+    node.className = "toast " + (kind || "info");
+    node.setAttribute("role", kind === "fail" ? "alert" : "status");
+    node.textContent = message;
+    els.toastStack.appendChild(node);
+    window.setTimeout(() => {
+      node.style.opacity = "0";
+      node.style.transform = "translateY(8px)";
+      window.setTimeout(() => node.remove(), 220);
+    }, 4600);
+  }
+
+  function showPaymentError(message) {
+    if (!message) {
+      els.paymentError.hidden = true;
+      els.paymentErrorText.textContent = "";
       return;
     }
-    processBtn.disabled = true;
-    try {
-      // Step 1: Try AI extraction first
-      const aiResponse = await request("/api/paypal/ai-extract", {
-        method: "POST",
-        body: JSON.stringify({ instruction }),
-      });
-      const aiOk = aiResponse.ok && aiResponse.data && aiResponse.data.aiInterpreted === true;
-      
-      if (aiOk) {
-        // AI extraction succeeded
-        extracted = {
-          aiInterpreted: true,
-          receiver: aiResponse.data.receiver,
-          amount: aiResponse.data.amount,
-          currency: aiResponse.data.currency,
-          purpose: aiResponse.data.purpose,
-          intent: {
-            requestId: aiResponse.data.intent.requestId,
-            receiver: aiResponse.data.receiver,
-            amountMinor: BigInt(Math.round(parseFloat(aiResponse.data.amount) * 100)),
-            currency: aiResponse.data.currency,
-            purpose: aiResponse.data.purpose,
-            nonce: "",
-          },
-        };
-        // Show AI badge
-        const aiBadge = document.createElement("span");
-        aiBadge.className = "badge ai-badge";
-        aiBadge.textContent = "AI-INTERPRETED";
-        // Remove existing AI badge if any
-        const existingAiBadge = document.querySelector(".ai-badge");
-        if (existingAiBadge) existingAiBadge.remove();
-        const step2Panel = document.getElementById("step-2-panel");
-        step2Panel.appendChild(aiBadge);
-        
-        // Display AI-extracted details
-        extractedAmount.textContent = parseFloat(aiResponse.data.amount).toFixed(2);
-        extractedReceiver.textContent = aiResponse.data.receiver;
-        extractedCurrency.textContent = aiResponse.data.currency;
-        extractedPurpose.textContent = aiResponse.data.purpose;
-        extractedRequestId.textContent = aiResponse.data.intent.requestId;
-        
-        // Update AI mode state display
-        const aiModeState = document.getElementById("ai-mode-state");
-        aiModeState.style.display = "block";
-        const aiBadgeDisplay = document.getElementById("ai-badge");
-        aiBadgeDisplay.textContent = "AI-INTERPRETED";
-      } else {
-        // AI extraction failed or not available — show error
-        // DO NOT silently fall back to deterministic regex parser
-        const aiError = aiResponse.data ? (aiResponse.data.reason || aiResponse.data.error || "Unknown AI error") : "AI endpoint unavailable";
-        setError(`AI extraction failed: ${aiError}. The deterministic regex parser is available but not auto-activated per security policy.`);
-        
-        // Try deterministic parser only as explicit user choice (not automatic fallback)
-        // If user wants deterministic, they can click "Use deterministic parsing" 
-        // but per policy we do NOT auto-activate it here.
-        // Just mark that AI failed and proceed with whatever we have.
-        extracted = { aiInterpreted: false, error: "AI failed" };
-        
-        policyResult.textContent = "AI extraction failed — policy cannot be evaluated without valid extraction.";
-        policyResult.className = "error";
-        initiateBtn.disabled = true;
-        showStage(3);
-        return;
-      }
-      
-      // Policy check
-      const policy = extracted ? extracted.policy : null;
-      if (policy && policy.allowed) {
-        const reasons = policy.preApprovalReasons || [];
-        policyResult.textContent = reasons.length > 0
-          ? "Policy satisfied. Human approval is required before any capture. (" + reasons.map((r) => r.code).join(", ") + ")"
-          : "Policy satisfied. Human approval is required before any capture.";
-        policyResult.className = "ok";
-        initiateBtn.disabled = false;
-      } else if (policy) {
-        policyResult.textContent = "Policy rejected: " + (policy.reasons || []).map((r) => r.code + " — " + r.message).join("; ");
-        policyResult.className = "error";
-        initiateBtn.disabled = true;
-      } else {
-        policyResult.textContent = "No policy available — please verify extraction.";
-        policyResult.className = "error";
-        initiateBtn.disabled = true;
-      }
-      showStage(3);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "request failed");
-    } finally {
-      processBtn.disabled = false;
-    }
-  });
+    els.paymentErrorText.textContent = message;
+    els.paymentError.hidden = false;
+  }
 
-  initiateBtn.addEventListener("click", async () => {
-    if (!extracted) return;
-    setError("");
-    initiateBtn.disabled = true;
-    try {
-      const result = await request("/intent", {
-        method: "POST",
-        body: JSON.stringify(extracted.intent),
-      });
-      if (!result.ok) {
-        setError(result.data.error || "Could not initiate payment");
-        return;
-      }
-      payment = result.data;
-      setProviderMode(result.data.providerMode, result.data.simulated);
-      paypalOrderIdEl.textContent = result.data.paypalOrderId || "—";
-      approvalStatus.textContent = result.data.simulated
-        ? "Simulated order created. No PayPal page exists in mock mode; continue below to simulate the buyer return."
-        : "PayPal order created. Open the Sandbox approval page, approve as the sandbox buyer, then return here.";
-      openApprovalBtn.disabled = !result.data.paypalApprovalUrl;
-      showStage(4);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "request failed");
-    } finally {
-      initiateBtn.disabled = false;
-    }
-  });
+  function isVerifiedCapture(record) {
+    return Boolean(record && record.state === "CAPTURED" && record.verified === true);
+  }
 
-  openApprovalBtn.addEventListener("click", () => {
-    if (!payment) return;
-    if (!payment.paypalApprovalUrl) {
-      approvalStatus.textContent = "SIMULATION MODE — no real PayPal approval page exists.";
-    } else {
-      window.open(payment.paypalApprovalUrl, "_blank", "noopener");
-      approvalStatus.textContent = "Opened PayPal Sandbox approval in a new tab. Return when finished.";
-    }
-    showStage(5);
-  });
+  function recordStatusChip(record) {
+    return statusChip(record ? record.state : "", isVerifiedCapture(record));
+  }
 
-  confirmApprovalBtn.addEventListener("click", async () => {
-    if (!payment) return;
-    setError("");
-    confirmApprovalBtn.disabled = true;
-    try {
-      const result = await request("/approve", {
-        method: "POST",
-        body: JSON.stringify({ requestId: payment.requestId, paypalOrderId: payment.paypalOrderId }),
-      });
-      if (!result.ok) {
-        setError(result.data.error || "PayPal has not confirmed the approval");
-        confirmStatus.textContent = result.data.providerStatus ? `PayPal order status: ${result.data.providerStatus}` : "";
-        return;
-      }
-      confirmStatus.textContent = result.data.simulated
-        ? "Simulated approval recorded. No real PayPal approval occurred."
-        : "PayPal approval confirmed by the server.";
-      showStage(6);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "request failed");
-    } finally {
-      confirmApprovalBtn.disabled = false;
-    }
-  });
+  function verificationKind(record) {
+    if (isVerifiedCapture(record)) return "success";
+    if (record && record.state === "CAPTURED") return "warn";
+    if (record && record.state === "UNKNOWN") return "unknown";
+    return "neutral";
+  }
 
-  captureBtn.addEventListener("click", async () => {
-    if (!payment) return;
-    setError("");
-    captureBtn.disabled = true;
-    try {
-      const result = await request("/capture", {
-        method: "POST",
-        body: JSON.stringify({ requestId: payment.requestId, paypalOrderId: payment.paypalOrderId }),
-      });
-      if (!result.ok) {
-        if (result.data.state === "UNKNOWN" || result.data.state === "CAPTURED") {
-          const status = await request(`/payment/${encodeURIComponent(payment.requestId)}`, { method: "GET" });
-          if (status.ok) {
-            renderStatus(status.data);
-            await loadAudit(payment.requestId);
-            showStage(7);
-            setError(result.data.error || "");
-            return;
-          }
+  function verificationChip(record, verifiedLabel) {
+    if (isVerifiedCapture(record)) return chip(verifiedLabel || "Provider-confirmed", "success");
+    return chip("Not verified", verificationKind(record));
+  }
+
+  function isTerminalNonCaptureState(value) {
+    return value === "FAILED" || value === "VOIDED" || value === "STALE";
+  }
+
+  function captureResponseIsUncertain(status, data) {
+    const code = Number(status);
+    const payload = data || {};
+    if (code === 0) return true;
+    if (isTerminalNonCaptureState(payload.state)) return false;
+    if (payload.state === "CAPTURED" && payload.verified === true) return false;
+    if (code === 408 || code === 429 || code >= 500) return true;
+    return payload.ambiguous === true;
+  }
+
+  function captureButtonDisabled(order, record, auth, uncertain) {
+    const stateName = record ? record.state : "";
+    return !order || !auth || stateName !== "APPROVED" || uncertain === true;
+  }
+
+  function flowStageFor(analysis, order, record) {
+    let stage = 0;
+    if (analysis) stage = 1;
+    if (order) {
+      stage = 2;
+      if (record && ["APPROVED", "CAPTURING", "CAPTURED", "FAILED", "UNKNOWN", "VOIDED", "STALE"].indexOf(record.state) >= 0) stage = 3;
+      if (isVerifiedCapture(record)) stage = 4;
+    }
+    return stage;
+  }
+
+  function authUnavailableMessage(action) {
+    if (state.healthError || !state.health) {
+      return "Authentication status unavailable. The server health check failed, so authenticated payment operations are disabled until it succeeds.";
+    }
+    return "Operator token is REQUIRED to " + action + ".";
+  }
+
+  function applyServerRecord(record, data) {
+    if (!data) return record;
+    const current = { ...(record || {}), ...data };
+    state.current = current;
+    if (state.order) state.order = { ...state.order, state: data.state || current.state };
+    upsertPayment(current);
+    renderAllPayment();
+    return current;
+  }
+
+  function markCaptureUncertain(message) {
+    state.captureUncertain = true;
+    state.captureUncertainMessage = message || "Capture outcome uncertain. Do not retry; refresh status to reconcile.";
+    renderAllPayment();
+    els.captureStatus.textContent = "Capture outcome uncertain — do not retry. Use Refresh status to reconcile.";
+    showPaymentError(state.captureUncertainMessage);
+    toast("Capture outcome uncertain. Do not retry; refresh status to reconcile.", "fail");
+  }
+
+  function openModal(options) {
+    const settings = options || {};
+    state.lastFocus = document.activeElement;
+    els.modalTitle.textContent = settings.title || "Confirm";
+    els.modalSub.textContent = settings.subtitle || "";
+    els.modalBody.innerHTML = settings.bodyHTML || "";
+    els.modalConfirm.textContent = settings.confirmLabel || "Confirm";
+    els.modalConfirm.className = "btn " + (settings.kind || "primary");
+    els.modalConfirm.hidden = settings.showConfirm === false;
+    els.modalCancel.textContent = settings.cancelLabel || "Cancel";
+    [els.app, els.mobileNav].forEach((node) => {
+      node.setAttribute("inert", "");
+      node.inert = true;
+    });
+    els.modalBackdrop.classList.add("open");
+    els.modalBackdrop.setAttribute("aria-hidden", "false");
+
+    return new Promise((resolve) => {
+      const focusables = () => $$("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])", els.modalBackdrop)
+        .filter((node) => !node.disabled && !node.hidden && node.getAttribute("aria-hidden") !== "true");
+      const finish = (value) => {
+        els.modalBackdrop.classList.remove("open");
+        els.modalBackdrop.setAttribute("aria-hidden", "true");
+        [els.app, els.mobileNav].forEach((node) => {
+          node.inert = false;
+          node.removeAttribute("inert");
+        });
+        els.modalConfirm.removeEventListener("click", onConfirm);
+        els.modalCancel.removeEventListener("click", onCancel);
+        els.modalBackdrop.removeEventListener("click", onBackdrop);
+        document.removeEventListener("keydown", onKey);
+        if (state.lastFocus && document.contains(state.lastFocus) && typeof state.lastFocus.focus === "function") {
+          state.lastFocus.focus();
         }
-        captureStatus.textContent = result.data.state ? `State: ${result.data.state}` : "";
-        setError(result.data.error || "capture failed");
+        state.lastFocus = null;
+        resolve(value);
+      };
+      const onConfirm = () => finish(true);
+      const onCancel = () => finish(false);
+      const onBackdrop = (event) => {
+        if (event.target === els.modalBackdrop) finish(false);
+      };
+      const onKey = (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          finish(false);
+          return;
+        }
+        if (event.key !== "Tab") return;
+        const nodes = focusables();
+        if (nodes.length === 0) {
+          event.preventDefault();
+          return;
+        }
+        const first = nodes[0];
+        const last = nodes[nodes.length - 1];
+        const active = document.activeElement;
+        if (event.shiftKey) {
+          if (active === first || !els.modalBackdrop.contains(active)) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else if (active === last || !els.modalBackdrop.contains(active)) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+      els.modalConfirm.addEventListener("click", onConfirm);
+      els.modalCancel.addEventListener("click", onCancel);
+      els.modalBackdrop.addEventListener("click", onBackdrop);
+      document.addEventListener("keydown", onKey);
+      if (settings.showConfirm === false) els.modalCancel.focus();
+      else els.modalConfirm.focus();
+    });
+  }
+
+  function confirmAction(options) {
+    return openModal(options);
+  }
+
+  function infoModal(options) {
+    return openModal({ ...options, showConfirm: false, cancelLabel: options.cancelLabel || "Close" });
+  }
+
+  function updateSidebarA11y() {
+    const mobile = window.matchMedia("(max-width: 1024px)").matches;
+    const open = els.app.classList.contains("mobile-open");
+    const hidden = mobile && !open;
+    if (hidden) {
+      els.sidebar.setAttribute("inert", "");
+      els.sidebar.setAttribute("aria-hidden", "true");
+    } else {
+      els.sidebar.removeAttribute("inert");
+      els.sidebar.removeAttribute("aria-hidden");
+    }
+  }
+
+  function navigate(view) {
+    if (!VIEW_TITLES[view]) return;
+    state.view = view;
+    $$(".view").forEach((node) => node.classList.toggle("active", node.id === "view-" + view));
+    $$("[data-goto]").forEach((button) => {
+      if (button.getAttribute("data-goto") === view) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
+    els.pageTitle.textContent = VIEW_TITLES[view];
+    els.app.classList.remove("mobile-open");
+    if (window.matchMedia("(max-width: 1024px)").matches) {
+      els.sidebarToggle.setAttribute("aria-expanded", "false");
+    }
+    updateSidebarA11y();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (view === "overview") renderOverview();
+    if (view === "transactions") renderTransactions();
+    if (view === "audit") renderAuditSelect();
+  }
+
+  async function api(path, options) {
+    const settings = options || {};
+    const headers = { accept: "application/json" };
+    if (settings.body !== undefined) headers["content-type"] = "application/json";
+    const token = els.token.value.trim();
+    if (settings.auth !== false && token) headers["x-agentpay-operator-token"] = token;
+    const controller = typeof AbortController === "function" ? new AbortController() : null;
+    let timer = null;
+    if (controller && settings.timeoutMs) timer = window.setTimeout(() => controller.abort(), settings.timeoutMs);
+    let response;
+    try {
+      response = await fetch(path, {
+        method: settings.method || "GET",
+        headers,
+        credentials: "same-origin",
+        body: settings.body === undefined ? undefined : JSON.stringify(settings.body),
+        signal: controller ? controller.signal : undefined
+      });
+    } catch (error) {
+      const timedOut = Boolean(controller && controller.signal.aborted);
+      return {
+        ok: false,
+        status: 0,
+        data: {
+          error: timedOut
+            ? "The request timed out before a verified response was received."
+            : "Network error. Check the connection and try again."
+        }
+      };
+    } finally {
+      if (timer !== null) window.clearTimeout(timer);
+    }
+    let data = {};
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
+    return { ok: response.ok, status: response.status, data };
+  }
+
+  function errorMessage(result, fallback) {
+    const data = result && result.data ? result.data : {};
+    if (result && result.status === 401) return "Operator authentication required or token rejected. Enter a valid operator token and try again.";
+    if (typeof data.error === "string" && data.error) {
+      if (Array.isArray(data.reasons) && data.reasons.length > 0) {
+        return data.error + ": " + data.reasons.map((reason) => (reason.code ? reason.code + " — " : "") + (reason.message || "")).join("; ");
+      }
+      return data.error;
+    }
+    if (typeof data.reason === "string" && data.reason) return data.reason;
+    if (result && result.status) return (fallback || "Request failed") + " (HTTP " + result.status + ").";
+    return fallback || "Request failed.";
+  }
+
+  function authReady() {
+    if (!state.health || state.healthError) return false;
+    return state.health.operatorAuthRequired !== true || els.token.value.trim().length > 0;
+  }
+
+  function renderTokenStatus() {
+    if (!state.health) {
+      els.tokenRequiredMark.hidden = false;
+      els.tokenRequirementText.textContent = "UNKNOWN";
+      els.tokenStatus.textContent = state.healthError
+        ? "Authentication status unavailable. The health check failed; authenticated operations are disabled until the server is reachable."
+        : "Authentication status unavailable until the server health check completes. Authenticated operations are disabled.";
+      updateActionStates();
+      return;
+    }
+    const required = state.health.operatorAuthRequired === true;
+    const hasToken = els.token.value.trim().length > 0;
+    els.tokenRequiredMark.hidden = !required;
+    els.tokenRequirementText.textContent = required ? "REQUIRED" : "not required in this local demo";
+    if (!required) {
+      els.tokenStatus.textContent = "This server does not require operator authentication (local demo).";
+    } else if (hasToken) {
+      els.tokenStatus.textContent = "Token entered. It is held in this page only and is not saved or logged.";
+    } else {
+      els.tokenStatus.textContent = "Required for AI advisory, order creation, approval verification, capture, and audit access.";
+    }
+    updateActionStates();
+  }
+
+  function renderHealth() {
+    state.healthError = false;
+    const health = state.health || {};
+    const simulated = health.simulated === true || health.providerMode === "mock";
+    els.chipProvider.innerHTML = chip("Provider: " + providerText(), providerKind());
+    els.chipPaymentMode.innerHTML = simulated ? chip("SIMULATED · mock provider", "pending") : chip("PayPal Sandbox", "success");
+    els.chipAuth.innerHTML = health.operatorAuthRequired ? chip("Operator auth: REQUIRED", "required-chip") : chip("Operator auth: local demo", "neutral");
+    els.chipNetwork.innerHTML = chip("Monad Testnet · 10143", "neutral");
+    els.sysProvider.innerHTML = simulated ? chip("Mock / simulated", "pending") : chip("PayPal Sandbox", "success");
+    els.sysAuth.innerHTML = health.operatorAuthRequired ? chip("Operator token required", "required-chip") : chip("Open local demo", "neutral");
+    els.footProvider.textContent = "Provider: " + (simulated ? "SIMULATED (mock)" : "PayPal Sandbox");
+    els.footProviderDot.className = "dot" + (simulated ? " warn" : "");
+    els.footAuth.textContent = health.operatorAuthRequired ? "Operator auth: REQUIRED" : "Operator auth: local demo";
+    els.footAuthDot.className = "dot" + (health.operatorAuthRequired ? " warn" : "");
+    els.simulationBanner.hidden = !simulated;
+    renderTokenStatus();
+  }
+
+  async function loadHealth() {
+    const result = await api("/health", { auth: false });
+    if (!result.ok) {
+      state.health = null;
+      state.healthError = true;
+      els.chipProvider.innerHTML = chip("Provider: unavailable", "fail");
+      els.chipPaymentMode.innerHTML = chip("Provider unavailable", "fail");
+      els.chipAuth.innerHTML = chip("Authentication status unavailable", "fail");
+      els.sysProvider.innerHTML = chip("Unavailable", "fail");
+      els.sysAuth.innerHTML = chip("Authentication status unavailable", "fail");
+      els.footProvider.textContent = "Provider: unavailable";
+      els.footProviderDot.className = "dot fail";
+      els.footAuth.textContent = "Operator auth: unavailable";
+      els.footAuthDot.className = "dot fail";
+      renderTokenStatus();
+      updateActionStates();
+      return;
+    }
+    state.health = result.data;
+    state.healthError = false;
+    renderHealth();
+    renderOverview();
+  }
+
+  function upsertPayment(record) {
+    if (!record) return;
+    const id = paymentIdOf(record);
+    if (!id) return;
+    const index = state.payments.findIndex((item) => paymentIdOf(item) === id);
+    if (index >= 0) {
+      state.payments[index] = { ...state.payments[index], ...record };
+    } else {
+      state.payments.unshift({ ...record, sessionAddedAt: Date.now() });
+    }
+  }
+
+  function renderOverview() {
+    const payments = state.payments;
+    const verified = payments.filter((item) => isVerifiedCapture(item)).length;
+    const pending = payments.filter((item) => ["ORDER_CREATED", "APPROVED", "CAPTURING", "RESERVED"].indexOf(item.state) >= 0).length;
+    const attention = payments.filter((item) => ["FAILED", "VOIDED", "STALE", "UNKNOWN"].indexOf(item.state) >= 0).length;
+    els.kpiSession.textContent = String(payments.length);
+    els.kpiVerified.textContent = String(verified);
+    els.kpiPending.textContent = String(pending);
+    els.kpiAttention.textContent = String(attention);
+
+    if (payments.length === 0) {
+      els.recentActivity.innerHTML = emptyState(
+        "No payments in this session yet",
+        "Start a PayPal payment to populate session activity. The server does not expose a transaction list, so this console never invents one."
+      );
+      return;
+    }
+
+    const recent = payments.slice(0, 4);
+    els.recentActivity.innerHTML = '<div class="kv">' + recent.map((item) => {
+      const id = paymentIdOf(item);
+      return '<div class="kv-row"><span>' + recordStatusChip(item) + ' <span class="mono">' + esc(shortId(id, 20)) + "</span></span><span>" +
+        esc(money(item.amountMinor)) + " → " + esc(item.receiver || "—") + "</span></div>";
+    }).join("") + "</div>";
+  }
+
+  function rowActions(id) {
+    return '<button class="btn sm" type="button" data-action="detail" data-id="' + esc(id) + '">Details</button> ' +
+      '<button class="btn sm" type="button" data-action="audit" data-id="' + esc(id) + '">Audit</button>';
+  }
+
+  function renderTransactions() {
+    const payments = state.payments;
+    els.txCountChip.innerHTML = chip(payments.length + (payments.length === 1 ? " record" : " records"), "neutral");
+    els.clearSessionBtn.disabled = payments.length === 0;
+    els.transactionsEmpty.hidden = payments.length > 0;
+    els.transactionsList.hidden = payments.length === 0;
+
+    if (payments.length === 0) {
+      els.txTbody.innerHTML = "";
+      els.transactionsCards.innerHTML = "";
+      renderAuditSelect();
+      return;
+    }
+
+    els.txTbody.innerHTML = payments.map((item) => {
+      const id = paymentIdOf(item);
+      return "<tr>" +
+        "<td>" + recordStatusChip(item) + "</td>" +
+        '<td><span class="cell-strong mono">' + esc(shortId(id, 22)) + '</span><span class="cell-sub">' + esc(item.providerMode || "") + "</span></td>" +
+        '<td><span class="cell-strong">' + esc(item.receiver || "—") + "</span></td>" +
+        '<td><span class="cell-strong">' + esc(money(item.amountMinor)) + '</span><span class="cell-sub">' + esc(item.currency || "USD") + "</span></td>" +
+        "<td>" + verificationChip(item, "Verified") + "</td>" +
+        '<td><span class="cell-strong">' + esc(fmtTime(item.createdAt)) + "</span></td>" +
+        '<td><div class="hero-actions" style="margin:0;gap:6px">' + rowActions(id) + "</div></td>" +
+        "</tr>";
+    }).join("");
+
+    els.transactionsCards.innerHTML = payments.map((item) => {
+      const id = paymentIdOf(item);
+      return '<div class="tx-card">' +
+        '<div class="tx-card-head">' + recordStatusChip(item) + '<span class="mono">' + esc(shortId(id, 22)) + "</span></div>" +
+        '<div class="tx-card-row"><span>Receiver</span><span>' + esc(item.receiver || "—") + "</span></div>" +
+        '<div class="tx-card-row"><span>Amount</span><span>' + esc(money(item.amountMinor)) + " " + esc(item.currency || "USD") + "</span></div>" +
+        '<div class="tx-card-row"><span>Capture verified</span><span>' + verificationChip(item, "Yes") + "</span></div>" +
+        '<div class="tx-card-row"><span>Created</span><span>' + esc(fmtTime(item.createdAt)) + "</span></div>" +
+        '<div class="hero-actions" style="margin:0;gap:6px">' + rowActions(id) + "</div>" +
+        "</div>";
+    }).join("");
+
+    renderAuditSelect();
+  }
+
+  function detailHTML(record) {
+    if (!record) return emptyState("Record unavailable", "This payment is no longer in the session list.");
+    const id = paymentIdOf(record);
+    const approval = record.approvalBinding || null;
+    return '<div class="kv" style="margin-bottom:14px">' +
+      '<div class="kv-row"><span>State</span><span>' + recordStatusChip(record) + "</span></div>" +
+      '<div class="kv-row"><span>Capture verified</span><span>' + verificationChip(record) + "</span></div>" +
+      "</div>" +
+      '<dl class="detail-grid">' +
+      '<div class="detail full"><dt>Request / payment ID</dt><dd class="mono">' + esc(id || "—") + "</dd></div>" +
+      '<div class="detail"><dt>Receiver</dt><dd>' + esc(record.receiver || "—") + "</dd></div>" +
+      '<div class="detail"><dt>Amount</dt><dd>' + esc(money(record.amountMinor)) + " " + esc(record.currency || "USD") + "</dd></div>" +
+      '<div class="detail"><dt>PayPal order ID</dt><dd class="mono">' + esc(record.paypalOrderId || record.orderId || "—") + "</dd></div>" +
+      '<div class="detail"><dt>PayPal capture ID</dt><dd class="mono">' + esc(record.paypalCaptureId || record.captureId || "—") + "</dd></div>" +
+      '<div class="detail"><dt>Purpose</dt><dd>' + esc(record.purpose || "—") + "</dd></div>" +
+      '<div class="detail"><dt>Provider mode</dt><dd>' + esc(record.providerMode || "—") + (record.simulated ? " (simulated)" : "") + "</dd></div>" +
+      '<div class="detail"><dt>Created</dt><dd>' + esc(fmtTime(record.createdAt)) + "</dd></div>" +
+      '<div class="detail"><dt>Approval verified</dt><dd>' + esc(fmtTime(record.approvalVerifiedAt)) + "</dd></div>" +
+      '<div class="detail"><dt>Capture verified at</dt><dd>' + esc(fmtTime(record.captureVerifiedAt)) + "</dd></div>" +
+      '<div class="detail"><dt>Operator</dt><dd>' + esc(approval && approval.operatorId ? approval.operatorId : "—") + "</dd></div>" +
+      "</dl>" +
+      '<div class="divider"></div>' +
+      '<button class="btn" type="button" data-modal-refresh="' + esc(id) + '">Refresh status from server</button>';
+  }
+
+  function showPaymentDetail(id) {
+    const record = state.payments.find((item) => paymentIdOf(item) === id);
+    infoModal({
+      title: "Payment record",
+      subtitle: record ? "State and references returned by the backend." : "Record not found.",
+      bodyHTML: detailHTML(record)
+    });
+  }
+
+  async function refreshPayment(id) {
+    if (!id) return null;
+    const result = await api("/api/paypal/payment/" + encodeURIComponent(id));
+    if (!result.ok) {
+      toast(errorMessage(result, "Could not refresh payment status"), "fail");
+      return null;
+    }
+    const data = result.data || {};
+    upsertPayment(data);
+    if (state.current && paymentIdOf(state.current) === id) {
+      state.current = { ...state.current, ...data };
+      if (state.order && paymentIdOf(state.order) === id) state.order = { ...state.order, state: data.state };
+      const resolved = isVerifiedCapture(data) || ["FAILED", "VOIDED", "STALE"].indexOf(data.state) >= 0;
+      if (isVerifiedCapture(data)) {
+        state.captureUncertain = false;
+        state.captureUncertainMessage = "";
+        state.captureAlreadyCaptured = false;
+      } else if (["FAILED", "VOIDED", "STALE"].indexOf(data.state) >= 0) {
+        state.captureUncertain = false;
+        state.captureUncertainMessage = "";
+        state.captureAlreadyCaptured = false;
+      } else {
+        if (state.captureUncertain !== true) {
+          state.captureUncertain = data.state === "CAPTURED";
+          state.captureUncertainMessage = data.state === "CAPTURED"
+            ? "The server reports CAPTURED without verified provider confirmation. Reconcile before further action."
+            : "";
+        }
+      }
+      els.captureStatus.textContent = resolved
+        ? "Status refreshed from the server: " + statusLabel(data.state) + "."
+        : (state.captureUncertain
+          ? "Status refreshed, but the capture outcome remains uncertain. A normal status refresh is not authoritative reconciliation."
+          : "Status refreshed from the server: " + statusLabel(data.state) + ".");
+      showPaymentError(state.captureUncertain ? state.captureUncertainMessage : "");
+      renderCurrentState();
+    }
+    renderOverview();
+    renderTransactions();
+    toast("Payment status refreshed from the server.", "success");
+    return data;
+  }
+
+  function renderAuditSelect() {
+    const current = els.auditSelect.value;
+    const options = ['<option value="">Select a session payment…</option>'].concat(
+      state.payments.map((item) => {
+        const id = paymentIdOf(item);
+        return '<option value="' + esc(id) + '">' + esc(shortId(id, 24)) + " · " + esc(money(item.amountMinor)) + " · " + esc(statusLabel(item.state)) + "</option>";
+      })
+    );
+    els.auditSelect.innerHTML = options.join("");
+    if (current && state.payments.some((item) => paymentIdOf(item) === current)) els.auditSelect.value = current;
+  }
+  function deterministicFieldsHTML() {
+    const analysis = state.analysis;
+    if (!analysis) return "";
+    const intent = analysis.intent;
+    return '<div class="divider"></div>' +
+      '<p class="hint" style="margin-bottom:10px"><strong>Deterministic extraction (authoritative)</strong></p>' +
+      '<dl class="detail-grid">' +
+      '<div class="detail"><dt>Receiver</dt><dd>' + esc(intent.receiver) + "</dd></div>" +
+      '<div class="detail"><dt>Amount</dt><dd>' + esc(money(intent.amountMinor)) + " " + esc(intent.currency) + "</dd></div>" +
+      '<div class="detail"><dt>Purpose</dt><dd>' + esc(intent.purpose) + "</dd></div>" +
+      '<div class="detail"><dt>Request ID</dt><dd class="mono">' + esc(shortId(intent.requestId, 26)) + "</dd></div>" +
+      "</dl>";
+  }
+
+  function renderAiEmpty() {
+    els.aiBody.innerHTML = emptyState(
+      "No interpretation yet",
+      "Analyze an instruction to compare the advisory AI interpretation with the authoritative deterministic extraction."
+    );
+  }
+
+  function renderAiPending() {
+    els.aiBody.innerHTML = '<div class="banner info">' +
+      '<svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4l3 2"></path></svg>' +
+      "<div><strong>AI advisory in progress.</strong> The deterministic extraction below is already final and remains authoritative.</div></div>" +
+      deterministicFieldsHTML();
+  }
+
+  function renderAiUnavailable(reason) {
+    els.aiBody.innerHTML = '<div class="banner warn">' +
+      '<svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3L12 3z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg>' +
+      "<div><strong>AI advisory unavailable.</strong> " + esc(reason || "The AI provider did not return an interpretation.") +
+      " Deterministic extraction remains authoritative; execution is unaffected.</div></div>" +
+      deterministicFieldsHTML();
+  }
+
+  function renderAiResult() {
+    const analysis = state.analysis;
+    const ai = state.ai;
+    if (!analysis || !ai) {
+      renderAiUnavailable("No advisory interpretation was returned.");
+      return;
+    }
+    const intent = analysis.intent;
+    const aiAmount = Number(ai.amount);
+    const expectedAmount = Number(usd(intent.amountMinor));
+    const amountMatch = Number.isFinite(aiAmount) && Math.abs(aiAmount - expectedAmount) < 0.005;
+    const receiverMatch = String(ai.receiver || "").trim().toLowerCase() === String(intent.receiver || "").trim().toLowerCase();
+    const currencyMatch = String(ai.currency || "").trim().toUpperCase() === String(intent.currency || "").trim().toUpperCase();
+    const mismatches = [];
+    if (!receiverMatch) mismatches.push("receiver");
+    if (!amountMatch) mismatches.push("amount");
+    if (!currencyMatch) mismatches.push("currency");
+
+    const comparison = mismatches.length === 0
+      ? '<div class="banner success" style="margin-top:14px"><svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg><div>AI interpretation matches the deterministic extraction on receiver, amount, and currency. This match is informational and is not an authorization.</div></div>'
+      : '<div class="banner warn" style="margin-top:14px"><svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3L12 3z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg><div><strong>AI interpretation differs on ' + esc(mismatches.join(", ")) + '.</strong> The deterministic values shown below are authoritative. AI output cannot alter the payment request.</div></div>';
+
+    els.aiBody.innerHTML = '<div class="banner info" style="margin-bottom:14px"><svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><path d="M12 8h.01"></path></svg><div><strong>Advisory only.</strong> This interpretation is displayed for transparency. It was not used to authorize, approve, initiate, or capture the payment.</div></div>' +
+      '<dl class="detail-grid">' +
+      '<div class="detail full"><dt>AI-INTERPRETED RECEIVER</dt><dd>' + esc(ai.receiver || "—") + (receiverMatch ? "" : ' <span class="chip pending"><span class="dot"></span>differs</span>') + "</dd></div>" +
+      '<div class="detail"><dt>Amount</dt><dd>' + esc(ai.amount || "—") + " " + esc(ai.currency || "") + "</dd></div>" +
+      '<div class="detail"><dt>Currency</dt><dd>' + esc(ai.currency || "—") + "</dd></div>" +
+      '<div class="detail full"><dt>Purpose</dt><dd>' + esc(ai.purpose || "—") + "</dd></div>" +
+      "</dl>" + comparison + deterministicFieldsHTML();
+  }
+
+  function renderPolicyEmpty() {
+    els.policyBody.innerHTML = emptyState(
+      "No policy decision yet",
+      "Analyze an instruction to run the deterministic spending policy. Blocking reasons and required approval will appear here."
+    );
+  }
+
+  function renderPolicyRejected(data) {
+    const reasons = data && Array.isArray(data.reasons) ? data.reasons : [];
+    const error = data && typeof data.error === "string" ? data.error : "The deterministic parser could not extract a valid payment request.";
+    els.policyBody.innerHTML = '<div class="banner danger"><svg class="b-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16h.01"></path></svg><div><strong>Extraction rejected.</strong> ' + esc(error) + "</div></div>" +
+      (reasons.length > 0 ? '<ul class="list fail mt-18">' + reasons.map((reason) => "<li><span><strong>" + esc(reason.code || "REASON") + "</strong> — " + esc(reason.message || "") + "</span></li>").join("") + "</ul>" : "") +
+      '<p class="hint" style="margin-top:14px">Revise the instruction so it names a supported receiver, a USD amount within the $10.00 ceiling, and a purpose.</p>';
+  }
+
+  function renderPolicy() {
+    const analysis = state.analysis;
+    if (!analysis) {
+      renderPolicyEmpty();
+      return;
+    }
+    const policy = analysis.policy || {};
+    const explanation = analysis.explanation || {};
+    const allowed = policy.allowed === true;
+    const requires = policy.requiresHumanApproval === true;
+    const reasons = Array.isArray(policy.reasons) ? policy.reasons : [];
+    const pre = Array.isArray(policy.preApprovalReasons) ? policy.preApprovalReasons : [];
+    const details = Array.isArray(explanation.details) ? explanation.details : [];
+
+    let html = '<div class="hero-actions" style="margin:0 0 14px">' +
+      (allowed ? chip("POLICY CHECKS PASSED", "success") : chip("POLICY REJECTED", "fail")) +
+      (requires ? chip("HUMAN APPROVAL REQUIRED", "pending") : chip("APPROVAL NOT REQUIRED", "neutral")) +
+      chip("DETERMINISTIC", "info") +
+      "</div>";
+
+    if (explanation.summary) html += '<p style="font-size:0.92rem;font-weight:650;color:var(--ink)">' + esc(explanation.summary) + "</p>";
+    if (explanation.nextStep) html += '<p class="hint" style="margin-top:8px"><strong>Next step:</strong> ' + esc(explanation.nextStep) + "</p>";
+
+    if (details.length > 0) {
+      html += '<div class="divider"></div><p class="hint" style="margin-bottom:8px"><strong>Deterministic checks</strong></p>' +
+        '<ul class="list check">' + details.map((line) => "<li><span>" + esc(line) + "</span></li>").join("") + "</ul>";
+    }
+
+    if (reasons.length > 0) {
+      html += '<div class="divider"></div><p class="hint" style="margin-bottom:8px"><strong>Blocking reasons</strong></p>' +
+        '<ul class="list fail">' + reasons.map((reason) => "<li><span><strong>" + esc(reason.code || "REASON") + "</strong> — " + esc(reason.message || "") + "</span></li>").join("") + "</ul>";
+    }
+
+    if (allowed && pre.length > 0) {
+      html += '<div class="divider"></div><div class="banner warn"><div><strong>Pre-approval requirement:</strong> ' +
+        esc(pre.map((reason) => (reason.code || "REASON") + " — " + (reason.message || "")).join("; ")) +
+        ". The order and capture remain locked until operator approval is verified.</div></div>";
+    }
+
+    html += '<p class="hint" style="margin-top:14px">Policy evaluation is deterministic and server-side. A passing result means spend checks are satisfied; it is never authorization to capture on its own.</p>';
+    els.policyBody.innerHTML = html;
+  }
+
+  function renderSummary() {
+    const analysis = state.analysis;
+    if (!analysis) {
+      els.sumAmount.textContent = "—";
+      els.sumCurrency.textContent = "—";
+      els.sumReceiver.textContent = "—";
+      els.sumPurpose.textContent = "—";
+      els.sumRequest.textContent = "—";
+      els.sumState.innerHTML = chip("Idle", "neutral");
+      return;
+    }
+    const intent = analysis.intent;
+    els.sumAmount.textContent = money(intent.amountMinor);
+    els.sumCurrency.textContent = intent.currency || "USD";
+    els.sumReceiver.textContent = intent.receiver || "—";
+    els.sumPurpose.textContent = intent.purpose || "—";
+    els.sumRequest.textContent = intent.requestId || "—";
+    const record = state.current || state.order;
+    if (state.captureUncertain) {
+      els.sumState.innerHTML = chip("Capture uncertain", "unknown");
+    } else if (state.captureAlreadyCaptured && record && record.state === "CAPTURED") {
+      els.sumState.innerHTML = chip("Already captured", isVerifiedCapture(record) ? "success" : "warn");
+    } else if (record && record.state === "CAPTURED" && !isVerifiedCapture(record)) {
+      els.sumState.innerHTML = chip("Captured — unverified", "warn");
+    } else {
+      els.sumState.innerHTML = record ? recordStatusChip(record) : chip("Policy evaluated", "info");
+    }
+  }
+
+  function renderFlow() {
+    const record = state.order ? (state.current || state.order) : null;
+    const stage = flowStageFor(state.analysis, state.order, record);
+    const unverifiedCapture = Boolean(record && record.state === "CAPTURED" && !isVerifiedCapture(record));
+    $$("#flow-steps .step").forEach((node, index) => {
+      const step = index + 1;
+      node.classList.toggle("done", step <= stage);
+      node.classList.toggle("current", step === stage + 1);
+      node.classList.toggle("warn", step === 4 && unverifiedCapture);
+    });
+  }
+
+  function renderApprovalPanel() {
+    const analysis = state.analysis;
+    if (!analysis) {
+      els.approvalEmpty.hidden = false;
+      els.approvalPanel.hidden = true;
+      return;
+    }
+    const policy = analysis.policy || {};
+    const order = state.order;
+    const record = state.current || order;
+    els.approvalEmpty.hidden = true;
+    els.approvalPanel.hidden = false;
+
+    let statusHTML = "";
+    if (state.captureUncertain) {
+      statusHTML = '<div class="banner danger"><div><strong>Capture outcome uncertain.</strong> Do not retry. Use Refresh status to reconcile with the server before any further action.</div></div>';
+    } else if (policy.allowed !== true) {
+      statusHTML = '<div class="banner danger"><div>Policy rejected this request. Order creation is disabled until the instruction satisfies every deterministic check.</div></div>';
+    } else if (!order) {
+      statusHTML = '<div class="banner info"><div><strong>Policy checks passed.</strong> Review the amount and receiver, then create the PayPal order. Creating an order does not move funds and approval is still required.</div></div>';
+    } else {
+      const stateName = record ? record.state : order.state;
+      if (stateName === "ORDER_CREATED") {
+        statusHTML = '<div class="banner warn"><div><strong>Order created.</strong> Open the PayPal Sandbox approval page, approve as the sandbox buyer, then return and verify the approval with the server.</div></div>';
+      } else if (stateName === "APPROVED") {
+        statusHTML = '<div class="banner success"><div><strong>Approval verified by the server.</strong> Capture is now available as a separate confirmed action.</div></div>';
+      } else if (stateName === "CAPTURED") {
+        if (state.captureAlreadyCaptured && isVerifiedCapture(record)) {
+          statusHTML = '<div class="banner info"><div><strong>Already captured.</strong> The server reports this payment was previously captured and verified. No new capture was initiated.</div></div>';
+        } else if (isVerifiedCapture(record)) {
+          statusHTML = '<div class="banner success"><div><strong>Payment captured.</strong> Capture was verified against provider evidence.</div></div>';
+        } else {
+          statusHTML = '<div class="banner warn"><div><strong>CAPTURED reported without verified provider evidence.</strong> Refresh status and reconcile before relying on this result.</div></div>';
+        }
+      } else if (stateName === "UNKNOWN") {
+        statusHTML = '<div class="banner danger"><div><strong>UNKNOWN state.</strong> Do not retry. Manual reconciliation is required.</div></div>';
+      } else {
+        statusHTML = '<div class="banner warn"><div><strong>' + esc(statusLabel(stateName)) + '.</strong> Review the server status before continuing.</div></div>';
+      }
+    }
+    els.approvalStatus.innerHTML = statusHTML;
+
+    els.createOrderBtn.hidden = Boolean(order);
+    els.orderActions.hidden = !order;
+    if (order) {
+      const approval = record && record.approvalBinding ? record.approvalBinding : null;
+      els.orderDetails.innerHTML =
+        '<div class="detail full"><dt>PayPal order ID</dt><dd class="mono">' + esc(order.paypalOrderId || order.orderId || "—") + "</dd></div>" +
+        '<div class="detail"><dt>Request ID</dt><dd class="mono">' + esc(order.requestId || "—") + "</dd></div>" +
+        '<div class="detail"><dt>Provider mode</dt><dd>' + esc(order.providerMode || "—") + (order.simulated ? " (simulated)" : "") + "</dd></div>" +
+        '<div class="detail"><dt>Buyer approval page</dt><dd>' + (order.paypalApprovalUrl ? "Available" : "Not available (mock)") + "</dd></div>" +
+        '<div class="detail"><dt>Operator approval</dt><dd>' + (approval ? esc(approval.operatorId || "recorded") + " · " + esc(fmtTime(approval.verifiedAt)) : "Not recorded yet") + "</dd></div>";
+      els.approvalHint.textContent = order.simulated
+        ? "Mock mode: no real PayPal page exists. Use verify to simulate the buyer return; no real funds move."
+        : "The server confirms the approval directly with PayPal. A browser click alone cannot mark a payment approved.";
+    }
+  }
+
+  function renderExecutionPanel() {
+    const order = state.order;
+    if (!order) {
+      els.executionEmpty.hidden = false;
+      els.executionPanel.hidden = true;
+      els.captureStatus.textContent = "";
+      return;
+    }
+    const record = state.current || order;
+    const stateName = record ? record.state : order.state;
+    els.executionEmpty.hidden = true;
+    els.executionPanel.hidden = false;
+
+    let bannerHTML = "";
+    if (state.captureUncertain) {
+      bannerHTML = '<div class="banner danger"><div><strong>Capture outcome uncertain.</strong> Do not retry. Use Refresh status to reconcile with the server before any further action.</div></div>';
+    } else if (stateName === "ORDER_CREATED") {
+      bannerHTML = '<div class="banner info"><div>Capture is locked until the server has verified buyer approval.</div></div>';
+    } else if (stateName === "APPROVED") {
+      bannerHTML = '<div class="banner success"><div><strong>Ready to capture.</strong> Capture is a separate confirmed action and is verified independently.</div></div>';
+    } else if (stateName === "CAPTURING") {
+      bannerHTML = '<div class="banner warn"><div><strong>Capture in progress.</strong> Do not resubmit. Refresh the status to reconcile.</div></div>';
+    } else if (stateName === "CAPTURED") {
+      if (state.captureAlreadyCaptured && isVerifiedCapture(record)) {
+        bannerHTML = '<div class="banner info"><div><strong>Already captured.</strong> The server reports this payment was previously captured; no new capture was initiated. The verified capture reference is shown below.</div></div>';
+      } else if (isVerifiedCapture(record)) {
+        bannerHTML = '<div class="banner success"><div><strong>Capture complete and verified.</strong> The capture reference below is provider evidence, not a locally generated value.</div></div>';
+      } else {
+        bannerHTML = '<div class="banner warn"><div><strong>CAPTURED reported without verified provider evidence.</strong> Refresh status and reconcile before relying on this result.</div></div>';
+      }
+    } else if (stateName === "UNKNOWN") {
+      bannerHTML = '<div class="banner danger"><div><strong>UNKNOWN — fail closed.</strong> Do not retry. The server must be reconciled manually before any further action.</div></div>';
+    } else if (stateName === "FAILED" || stateName === "VOIDED" || stateName === "STALE") {
+      bannerHTML = '<div class="banner danger"><div><strong>' + esc(statusLabel(stateName)) + '.</strong> Review the server message. Start a new payment if a fresh attempt is required.</div></div>';
+    } else {
+      bannerHTML = '<div class="banner warn"><div><strong>' + esc(statusLabel(stateName)) + '.</strong> Review the current state before continuing.</div></div>';
+    }
+    els.executionStatus.innerHTML = bannerHTML;
+
+    const captureId = record.paypalCaptureId || record.captureId || "";
+    els.executionDetails.innerHTML =
+      '<div class="detail full"><dt>Request / payment ID</dt><dd class="mono">' + esc(paymentIdOf(record) || "—") + "</dd></div>" +
+      '<div class="detail"><dt>State</dt><dd>' + recordStatusChip(record) + "</dd></div>" +
+      '<div class="detail"><dt>Capture verified</dt><dd>' + verificationChip(record) + "</dd></div>" +
+      '<div class="detail"><dt>PayPal order ID</dt><dd class="mono">' + esc(record.paypalOrderId || record.orderId || "—") + "</dd></div>" +
+      '<div class="detail"><dt>PayPal capture ID</dt><dd class="mono">' + esc(captureId || "—") + "</dd></div>" +
+      '<div class="detail"><dt>Approval recorded</dt><dd>' + esc(fmtTime(record.approvalVerifiedAt)) + "</dd></div>" +
+      '<div class="detail"><dt>Capture verified at</dt><dd>' + esc(fmtTime(record.captureVerifiedAt)) + "</dd></div>" +
+      '<div class="detail full"><dt>Explanation</dt><dd>' + esc(record.explanation && record.explanation.summary ? record.explanation.summary : "No explanation returned by the server.") + "</dd></div>";
+  }
+
+  function updateActionStates() {
+    const analysis = state.analysis;
+    const policy = analysis ? analysis.policy : null;
+    const allowed = Boolean(policy && policy.allowed === true);
+    const order = state.order;
+    const record = state.current || order;
+    const auth = authReady();
+    const stateName = record ? record.state : "";
+
+    if (els.createOrderBtn) {
+      els.createOrderBtn.disabled = !allowed || !auth || Boolean(order);
+    }
+    if (els.openApprovalBtn) {
+      els.openApprovalBtn.disabled = !order || !order.paypalApprovalUrl;
+    }
+    if (els.verifyApprovalBtn) {
+      els.verifyApprovalBtn.disabled = !order || !auth || ["ORDER_CREATED", "APPROVED"].indexOf(stateName) < 0;
+    }
+    if (els.captureBtn) {
+      els.captureBtn.disabled = !order || !auth || stateName !== "APPROVED" || state.captureUncertain === true;
+    }
+    if (els.refreshStatusBtn) {
+      els.refreshStatusBtn.disabled = !order;
+    }
+    if (els.loadAuditBtn) {
+      els.loadAuditBtn.disabled = !state.health || state.healthError;
+    }
+  }
+
+  function renderCurrentState() {
+    renderSummary();
+    renderFlow();
+    renderApprovalPanel();
+    renderExecutionPanel();
+    updateActionStates();
+  }
+
+  function renderAllPayment() {
+    renderSummary();
+    renderFlow();
+    renderApprovalPanel();
+    renderExecutionPanel();
+    updateActionStates();
+    renderOverview();
+    renderTransactions();
+  }
+
+  function resetPaymentFlow() {
+    state.analysis = null;
+    state.ai = null;
+    state.order = null;
+    state.current = null;
+    state.captureUncertain = false;
+    state.captureUncertainMessage = "";
+    state.captureAlreadyCaptured = false;
+    showPaymentError("");
+    els.instruction.value = "";
+    els.captureStatus.textContent = "";
+    els.paymentAudit.innerHTML = "";
+    renderSummary();
+    renderFlow();
+    renderApprovalPanel();
+    renderExecutionPanel();
+    renderAiEmpty();
+    renderPolicyEmpty();
+    updateActionStates();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast("Ready for a new payment.", "info");
+  }
+
+  async function handleAnalyze() {
+    const instruction = els.instruction.value.trim();
+    showPaymentError("");
+    if (!instruction) {
+      showPaymentError("Enter a payment instruction first.");
+      els.instruction.focus();
+      return;
+    }
+    if (instruction.length > 2000) {
+      showPaymentError("The instruction is too long. Use 2000 characters or fewer.");
+      return;
+    }
+
+    els.analyzeBtn.disabled = true;
+    els.analyzeBtn.textContent = "Analyzing…";
+    state.analysis = null;
+    state.ai = null;
+    state.order = null;
+    state.current = null;
+    state.captureUncertain = false;
+    state.captureUncertainMessage = "";
+    state.captureAlreadyCaptured = false;
+    els.paymentAudit.innerHTML = "";
+    try {
+      const deterministic = await api("/api/paypal/extract", { method: "POST", body: { instruction }, auth: false });
+      if (!deterministic.ok || !deterministic.data || deterministic.data.ok !== true) {
+        renderPolicyRejected(deterministic.data || {});
+        renderAiUnavailable("Deterministic extraction failed, so no authoritative request exists.");
+        renderSummary();
+        renderFlow();
+        renderApprovalPanel();
+        renderExecutionPanel();
+        updateActionStates();
+        showPaymentError(errorMessage(deterministic, "Could not extract payment details."));
+        toast("The instruction could not be converted into a valid payment request.", "fail");
         return;
       }
-      captureStatus.textContent = result.data.simulated
+
+      state.analysis = {
+        instruction,
+        extracted: deterministic.data.extracted,
+        intent: deterministic.data.intent,
+        policy: deterministic.data.policy,
+        explanation: deterministic.data.explanation
+      };
+      renderSummary();
+      renderFlow();
+      renderPolicy();
+      renderApprovalPanel();
+      renderExecutionPanel();
+      updateActionStates();
+      renderAiPending();
+
+      if (state.healthError || !state.health) {
+        renderAiUnavailable("Authentication status unavailable. The AI advisory request is disabled until the server health check succeeds.");
+        return;
+      }
+      if (state.health.operatorAuthRequired === true && els.token.value.trim().length === 0) {
+        renderAiUnavailable("Operator token required for the AI advisory request.");
+        return;
+      }
+
+      const ai = await api("/api/paypal/ai-extract", { method: "POST", body: { instruction } });
+      if (ai.ok && ai.data && ai.data.ok === true && ai.data.aiInterpreted === true) {
+        state.ai = ai.data;
+        renderAiResult();
+      } else {
+        state.ai = null;
+        renderAiUnavailable(ai.status === 401 ? "Operator token rejected for the AI advisory request." : (ai.data && (ai.data.reason || ai.data.error)) || "The AI provider did not return an interpretation.");
+      }
+    } catch {
+      showPaymentError("The request failed unexpectedly. Check the connection and try again.");
+      toast("Analysis failed unexpectedly.", "fail");
+    } finally {
+      els.analyzeBtn.disabled = false;
+      els.analyzeBtn.textContent = "Analyze & evaluate policy";
+      updateActionStates();
+    }
+  }
+
+  async function handleCreateOrder() {
+    if (!state.analysis) return;
+    if (!authReady()) {
+      showPaymentError(authUnavailableMessage("create a PayPal order"));
+      els.token.focus();
+      toast("Enter the operator token before creating an order, or wait for the health check to succeed.", "fail");
+      return;
+    }
+    const intent = state.analysis.intent;
+    const confirmed = await confirmAction({
+      title: "Create PayPal order",
+      subtitle: "Human approval — step 1 of 3",
+      bodyHTML: '<div class="banner warn"><div><strong>This creates a PayPal Sandbox order.</strong> It does not capture funds. Capture requires a separate confirmation after approval is verified.</div></div>' +
+        '<dl class="detail-grid mt-18">' +
+        '<div class="detail full"><dt>Receiver</dt><dd>' + esc(intent.receiver) + "</dd></div>" +
+        '<div class="detail"><dt>Amount</dt><dd>' + esc(money(intent.amountMinor)) + " " + esc(intent.currency) + "</dd></div>" +
+        '<div class="detail"><dt>Request ID</dt><dd class="mono">' + esc(shortId(intent.requestId, 26)) + "</dd></div>" +
+        '<div class="detail full"><dt>Purpose</dt><dd>' + esc(intent.purpose) + "</dd></div>" +
+        "</dl>" +
+        '<p class="hint" style="margin-top:14px">Confirm that the receiver, amount, and purpose match the intent of the operator. Creating an order reserves the request identifiers.</p>',
+      confirmLabel: "Create PayPal order",
+      kind: "primary"
+    });
+    if (!confirmed) return;
+
+    els.createOrderBtn.disabled = true;
+    els.createOrderBtn.textContent = "Creating order…";
+    showPaymentError("");
+    try {
+      const result = await api("/api/paypal/intent", {
+        method: "POST",
+        body: {
+          requestId: intent.requestId,
+          receiver: intent.receiver,
+          amountMinor: intent.amountMinor,
+          currency: intent.currency,
+          purpose: intent.purpose,
+          nonce: intent.nonce,
+          expiresAt: intent.expiresAt
+        }
+      });
+      if (!result.ok) {
+        const message = errorMessage(result, "Could not create the PayPal order.");
+        showPaymentError(message + (result.status === 409 ? " Re-analyze the instruction to generate fresh identifiers." : ""));
+        toast("Order creation failed.", "fail");
+        return;
+      }
+      state.order = result.data;
+      state.current = result.data;
+      upsertPayment(result.data);
+      renderAllPayment();
+      toast("PayPal order created. Approve it in PayPal, then verify the approval here.", "success");
+    } catch {
+      showPaymentError("The order request failed unexpectedly.");
+      toast("Order creation failed unexpectedly.", "fail");
+    } finally {
+      els.createOrderBtn.textContent = "Create PayPal order";
+      updateActionStates();
+    }
+  }
+
+  function handleOpenApproval() {
+    if (!state.order) return;
+    if (!state.order.paypalApprovalUrl) {
+      toast("Mock mode: no PayPal approval page exists. Use verify to simulate the buyer return.", "warn");
+      return;
+    }
+    window.open(state.order.paypalApprovalUrl, "_blank", "noopener,noreferrer");
+    toast("PayPal Sandbox approval opened in a new tab. Return here when finished.", "info");
+  }
+
+  async function handleVerifyApproval() {
+    if (!state.order) return;
+    if (!authReady()) {
+      showPaymentError(authUnavailableMessage("verify approval"));
+      els.token.focus();
+      return;
+    }
+    const order = state.order;
+    const record = state.current || order;
+    const confirmed = await confirmAction({
+      title: "Verify buyer approval",
+      subtitle: "Human approval — step 2 of 3",
+      bodyHTML: '<div class="banner info"><div>The server will confirm the approval directly with PayPal. A browser click alone cannot mark this payment approved.</div></div>' +
+        '<dl class="detail-grid mt-18">' +
+        '<div class="detail full"><dt>PayPal order ID</dt><dd class="mono">' + esc(order.paypalOrderId || "—") + "</dd></div>" +
+        '<div class="detail"><dt>Amount</dt><dd>' + esc(money(order.amountMinor)) + " " + esc(order.currency || "USD") + "</dd></div>" +
+        '<div class="detail"><dt>Current state</dt><dd>' + esc(statusLabel(record.state)) + "</dd></div>" +
+        "</dl>",
+      confirmLabel: "Verify approval",
+      kind: "primary"
+    });
+    if (!confirmed) return;
+
+    els.verifyApprovalBtn.disabled = true;
+    els.verifyApprovalBtn.textContent = "Verifying…";
+    showPaymentError("");
+    try {
+      const result = await api("/api/paypal/approve", {
+        method: "POST",
+        body: { requestId: order.requestId, paypalOrderId: order.paypalOrderId }
+      });
+      if (!result.ok) {
+        const extra = result.data && result.data.providerStatus ? " PayPal order status: " + result.data.providerStatus + "." : "";
+        showPaymentError(errorMessage(result, "PayPal has not confirmed the approval.") + extra);
+        toast("Approval could not be verified.", "fail");
+        return;
+      }
+      state.current = result.data;
+      state.order = { ...state.order, state: result.data.state };
+      upsertPayment(result.data);
+      renderAllPayment();
+      toast(result.data.simulated ? "Simulated approval recorded. No real PayPal approval occurred." : "Approval verified by the server.", result.data.simulated ? "warn" : "success");
+    } catch {
+      showPaymentError("The approval request failed unexpectedly.");
+      toast("Approval verification failed unexpectedly.", "fail");
+    } finally {
+      els.verifyApprovalBtn.textContent = "I approved in PayPal — verify";
+      updateActionStates();
+    }
+  }
+
+  async function handleCapture() {
+    if (!state.order) return;
+    const record = state.current || state.order;
+    if (!record || record.state !== "APPROVED") {
+      toast("Capture is available only after the server verifies approval.", "warn");
+      return;
+    }
+    if (!authReady()) {
+      showPaymentError(authUnavailableMessage("capture payments"));
+      els.token.focus();
+      return;
+    }
+    const confirmed = await confirmAction({
+      title: "Capture payment",
+      subtitle: "Human approval — step 3 of 3",
+      bodyHTML: '<div class="banner warn"><div><strong>This requests a PayPal Sandbox capture.</strong> The server re-checks policy, amount, currency, and merchant before requesting capture, then verifies the provider evidence independently.</div></div>' +
+        '<dl class="detail-grid mt-18">' +
+        '<div class="detail full"><dt>Receiver</dt><dd>' + esc(record.receiver) + "</dd></div>" +
+        '<div class="detail"><dt>Amount</dt><dd>' + esc(money(record.amountMinor)) + " " + esc(record.currency || "USD") + "</dd></div>" +
+        '<div class="detail"><dt>PayPal order ID</dt><dd class="mono">' + esc(record.paypalOrderId || record.orderId || "—") + "</dd></div>" +
+        "</dl>" +
+        '<p class="hint" style="margin-top:14px">Capture is attempted once. If the outcome is uncertain or UNKNOWN, do not retry; manual reconciliation is required.</p>',
+      confirmLabel: "Capture payment",
+      kind: "success"
+    });
+    if (!confirmed) return;
+
+    els.captureBtn.disabled = true;
+    els.captureBtn.textContent = "Capturing…";
+    els.captureStatus.textContent = "Requesting capture and verifying provider evidence…";
+    showPaymentError("");
+    try {
+      const result = await api("/api/paypal/capture", {
+        method: "POST",
+        body: { requestId: record.requestId, paypalOrderId: record.paypalOrderId || record.orderId },
+        timeoutMs: 30_000
+      });
+      const data = result.data || {};
+      const id = paymentIdOf(record);
+
+      if (result.status === 409 && data.state === "CAPTURED" && data.duplicate === true) {
+        state.captureAlreadyCaptured = true;
+        const status = await api("/api/paypal/payment/" + encodeURIComponent(id));
+        if (status.ok) {
+          const next = applyServerRecord(record, status.data);
+          if (isVerifiedCapture(status.data)) {
+            state.captureUncertain = false;
+            state.captureUncertainMessage = "";
+            els.captureStatus.textContent = "Already captured — verified by the provider. No new capture was initiated.";
+            toast("Already captured — verified by the provider.", "info");
+          } else if (status.data.state === "UNKNOWN") {
+            state.captureUncertain = false;
+            state.captureUncertainMessage = "";
+            els.captureStatus.textContent = "UNKNOWN — manual reconciliation required. Do not retry.";
+            showPaymentError("Capture state is UNKNOWN. Do not retry; manual reconciliation is required.");
+            toast("Capture state is UNKNOWN. Do not retry; manual reconciliation is required.", "fail");
+          } else if (["FAILED", "VOIDED", "STALE"].indexOf(status.data.state) >= 0) {
+            state.captureUncertain = false;
+            state.captureUncertainMessage = "";
+            els.captureStatus.textContent = "Current state: " + statusLabel(status.data.state) + ".";
+            showPaymentError("The server reports " + statusLabel(status.data.state) + " for this payment.");
+            toast("Already captured response could not be verified; server state is " + statusLabel(status.data.state) + ".", "fail");
+          } else {
+            markCaptureUncertain("The server reports this payment was already captured, but verified provider confirmation was not returned. Reconcile before further action.");
+          }
+          await loadExecutionAudit(paymentIdOf(next) || id);
+        } else {
+          markCaptureUncertain("The server reports this payment was already captured, but the status refresh failed. Reconcile before further action.");
+          await loadExecutionAudit(id);
+        }
+        return;
+      }
+
+      if (data.state === "CAPTURED" && data.duplicate === true) {
+        state.captureAlreadyCaptured = true;
+        if (isVerifiedCapture(data)) {
+          applyServerRecord(record, data);
+          state.captureUncertain = false;
+          state.captureUncertainMessage = "";
+          els.captureStatus.textContent = "Already captured — verified by the provider. No new capture was initiated.";
+          toast("Already captured — verified by the provider.", "info");
+        } else {
+          applyServerRecord(record, data);
+          markCaptureUncertain("The server reports this payment was already captured, but verified provider confirmation was not returned. Reconcile before further action.");
+        }
+        await loadExecutionAudit(id);
+        return;
+      }
+
+      if (data.state === "UNKNOWN") {
+        applyServerRecord(record, data);
+        state.captureUncertain = false;
+        state.captureUncertainMessage = "";
+        els.captureStatus.textContent = "UNKNOWN — manual reconciliation required. Do not retry.";
+        showPaymentError("Capture state is UNKNOWN. Do not retry; manual reconciliation is required.");
+        toast("Capture state is UNKNOWN. Do not retry; manual reconciliation is required.", "fail");
+        await loadExecutionAudit(id);
+        return;
+      }
+
+      if (data.state === "CAPTURING" || data.state === "CAPTURED") {
+        const status = await api("/api/paypal/payment/" + encodeURIComponent(id));
+        if (status.ok) {
+          const next = applyServerRecord(record, status.data);
+          if (isVerifiedCapture(status.data)) {
+            state.captureUncertain = false;
+            state.captureUncertainMessage = "";
+            state.captureAlreadyCaptured = false;
+            els.captureStatus.textContent = "Capture verified by the provider.";
+            toast("Capture verified by the provider.", "success");
+          } else if (status.data.state === "UNKNOWN") {
+            state.captureUncertain = false;
+            state.captureUncertainMessage = "";
+            els.captureStatus.textContent = "UNKNOWN — manual reconciliation required. Do not retry.";
+            showPaymentError("Capture state is UNKNOWN. Do not retry; manual reconciliation is required.");
+            toast("Capture state is UNKNOWN. Do not retry; manual reconciliation is required.", "fail");
+          } else if (status.data.state === "CAPTURING") {
+            state.captureUncertain = false;
+            state.captureUncertainMessage = "";
+            els.captureStatus.textContent = "Capture in progress. Do not resubmit; refresh status.";
+            toast("Capture is still in progress. Refresh status.", "warn");
+          } else if (status.data.state === "CAPTURED") {
+            markCaptureUncertain("The server reports CAPTURED without verified provider confirmation. Reconcile before further action.");
+          } else if (["FAILED", "VOIDED", "STALE"].indexOf(status.data.state) >= 0) {
+            state.captureUncertain = false;
+            state.captureUncertainMessage = "";
+            els.captureStatus.textContent = "Current state: " + statusLabel(status.data.state) + ".";
+            showPaymentError("Capture did not complete; the server reports " + statusLabel(status.data.state) + ".");
+            toast("Capture did not complete.", "fail");
+          } else {
+            markCaptureUncertain("The capture status did not resolve to a verified outcome. Reconcile before further action.");
+          }
+          await loadExecutionAudit(paymentIdOf(next) || id);
+        } else {
+          markCaptureUncertain("Capture state was reported as " + statusLabel(data.state) + ", but the status refresh failed. The outcome is uncertain; do not retry.");
+          await loadExecutionAudit(id);
+        }
+        return;
+      }
+
+      if (captureResponseIsUncertain(result.status, data)) {
+        if (data.state) applyServerRecord(record, data);
+        markCaptureUncertain(data.error || "The capture outcome is uncertain because no verified response was received.");
+        return;
+      }
+
+      if (!result.ok) {
+        const uncertain = captureResponseIsUncertain(result.status, data);
+        if (uncertain) {
+          if (data.state) applyServerRecord(record, data);
+          markCaptureUncertain(data.error || "The capture outcome is uncertain because no verified response was received.");
+          return;
+        }
+        if (data.state) applyServerRecord(record, data);
+        els.captureStatus.textContent = data.state ? "Current state: " + statusLabel(data.state) + "." : "";
+        showPaymentError(errorMessage(result, "Capture failed."));
+        toast("Capture failed.", "fail");
+        return;
+      }
+
+      if (!isVerifiedCapture(data)) {
+        const next = applyServerRecord(record, data);
+        if (["FAILED", "VOIDED", "STALE"].indexOf(data.state) >= 0) {
+          state.captureUncertain = false;
+          state.captureUncertainMessage = "";
+          els.captureStatus.textContent = "Current state: " + statusLabel(data.state) + ".";
+          showPaymentError("Capture did not complete; the server reports " + statusLabel(data.state) + ".");
+          toast("Capture did not complete.", "fail");
+        } else {
+          markCaptureUncertain("The server did not return verified CAPTURED provider evidence. Reconcile before any further action.");
+        }
+        await loadExecutionAudit(paymentIdOf(next) || id);
+        return;
+      }
+
+      state.captureUncertain = false;
+      state.captureUncertainMessage = "";
+      state.captureAlreadyCaptured = false;
+      applyServerRecord(record, data);
+      await loadExecutionAudit(paymentIdOf(data) || id);
+      els.captureStatus.textContent = data.simulated
         ? "Simulated capture complete — no real funds moved."
         : "Capture complete and verified by PayPal.";
-      const status = await request(`/payment/${encodeURIComponent(payment.requestId)}`, { method: "GET" });
-      if (status.ok) renderStatus(status.data);
-      else renderStatus(result.data);
-      await loadAudit(payment.requestId);
-      showStage(7);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "request failed");
+      toast(data.simulated ? "Simulated capture complete — no real funds moved." : "Capture complete and verified.", data.simulated ? "warn" : "success");
+    } catch {
+      markCaptureUncertain("The capture request failed unexpectedly. The outcome is uncertain; do not retry. Use Refresh status to reconcile.");
     } finally {
-      captureBtn.disabled = false;
+      els.captureBtn.textContent = "Capture payment";
+      updateActionStates();
     }
-  });
+  }
 
-  resetBtn.addEventListener("click", () => {
-    instructionEl.value = "";
-    extracted = null;
-    payment = null;
-    extractedAmount.textContent = "—";
-    extractedReceiver.textContent = "—";
-    extractedCurrency.textContent = "—";
-    extractedPurpose.textContent = "—";
-    extractedRequestId.textContent = "—";
-    policyResult.textContent = "—";
-    policyResult.className = "";
-    paypalOrderIdEl.textContent = "—";
-    approvalStatus.textContent = "";
-    confirmStatus.textContent = "";
-    captureStatus.textContent = "";
-    paymentStatusPre.textContent = "—";
-    paymentExplanationPre.textContent = "—";
-    paymentReferencesPre.textContent = "—";
-    paymentAuditPre.textContent = "—";
-    setError("");
-    showStage(1);
-  });
+  async function handleRefreshCurrent() {
+    const id = paymentIdOf(state.current) || paymentIdOf(state.order);
+    if (!id) return;
+    els.refreshStatusBtn.disabled = true;
+    els.refreshStatusBtn.textContent = "Refreshing…";
+    await refreshPayment(id);
+    els.refreshStatusBtn.textContent = "Refresh status";
+    updateActionStates();
+  }
+  function auditKind(event) {
+    const type = String((event && event.eventType) || "").toUpperCase();
+    const lifecycle = String((event && event.state) || "").toUpperCase();
+    if (lifecycle === "UNKNOWN" || type.indexOf("UNKNOWN") >= 0) return "fail";
+    if (type.indexOf("FAIL") >= 0 || type.indexOf("VOID") >= 0 || type.indexOf("REJECT") >= 0) return "fail";
+    if (type === "CAPTURE_VERIFIED") return "success";
+    if (type.indexOf("APPROVAL") >= 0 || type.indexOf("ORDER") >= 0 || type.indexOf("RESERVE") >= 0 || type.indexOf("CAPTURE") >= 0 || type.indexOf("INTENT") >= 0) return "pending";
+    if (lifecycle === "CAPTURED") return "success";
+    return "";
+  }
 
-  copyReferencesBtn.addEventListener("click", async () => {
-    const text = paymentReferencesPre.textContent || "";
+  function auditItemHTML(event) {
+    const refs = [event.providerOrderId, event.captureId].filter(Boolean);
+    const meta = [];
+    meta.push("state: " + esc(event.state || "—"));
+    if (event.operatorId) meta.push("operator: " + esc(event.operatorId));
+    if (refs.length > 0) meta.push("refs: " + esc(refs.join(" / ")));
+    return '<li class="tl-item"><span class="tl-dot ' + auditKind(event) + '"></span>' +
+      '<div class="tl-head"><span class="tl-type">' + esc(event.eventType || "EVENT") + "</span>" +
+      (event.code ? chip(event.code, "neutral") : "") +
+      '<span class="tl-time">' + esc(fmtTime(event.createdAt)) + "</span></div>" +
+      '<div class="tl-msg">' + esc(event.message || "") + "</div>" +
+      '<div class="tl-meta">' + meta.join(" · ") + "</div></li>";
+  }
+
+  function auditTimelineHTML(events) {
+    return '<ul class="timeline">' + events.map(auditItemHTML).join("") + "</ul>";
+  }
+
+  async function loadExecutionAudit(paymentId) {
+    if (!paymentId) return;
+    els.paymentAudit.innerHTML = '<p class="hint">Loading audit events…</p>';
+    const result = await api("/api/paypal/payment/" + encodeURIComponent(paymentId) + "/audit");
+    if (!result.ok) {
+      els.paymentAudit.innerHTML = '<div class="banner warn"><div>' + esc(errorMessage(result, "Audit trail unavailable.")) + "</div></div>";
+      return;
+    }
+    const events = Array.isArray(result.data.audit) ? result.data.audit : [];
+    els.paymentAudit.innerHTML = events.length === 0
+      ? '<p class="hint">No audit events recorded for this payment.</p>'
+      : auditTimelineHTML(events.slice(-6));
+  }
+
+  async function loadAuditTrail(explicitId) {
+    const id = String(explicitId || els.auditPaymentId.value.trim() || els.auditSelect.value || "").trim();
+    if (!id) {
+      toast("Select a session payment or enter a payment ID first.", "warn");
+      return;
+    }
+    if (!state.health || state.healthError) {
+      els.auditTrailState.innerHTML = chip("Authentication status unavailable", "fail");
+      els.auditTrailSub.textContent = "Audit retrieval is disabled until the server health check succeeds.";
+      els.auditTrail.innerHTML = '<div class="banner danger"><div>Authentication status unavailable. The health check failed; audit access is disabled until the server is reachable.</div></div>';
+      toast("Authentication status unavailable; audit access is disabled.", "fail");
+      return;
+    }
+    if (state.health.operatorAuthRequired === true && els.token.value.trim().length === 0) {
+      els.auditTrailState.innerHTML = chip("Token required", "required-chip");
+      els.auditTrailSub.textContent = "Audit retrieval is authenticated.";
+      els.auditTrail.innerHTML = '<div class="banner warn"><div>Operator token is REQUIRED to read the audit trail. Enter it on the New payment view, then retry.</div></div>';
+      toast("Operator token is required for audit access.", "fail");
+      return;
+    }
+    els.auditPaymentId.value = id;
+    if (state.payments.some((item) => paymentIdOf(item) === id)) els.auditSelect.value = id;
+    els.loadAuditBtn.disabled = true;
+    els.loadAuditBtn.textContent = "Loading…";
+    els.auditTrailState.innerHTML = chip("Loading", "neutral");
+    els.auditTrailSub.textContent = "Fetching append-only events for " + shortId(id, 28) + ".";
     try {
-      await navigator.clipboard.writeText(text);
-      copyReferencesBtn.textContent = "Copied";
-      setTimeout(() => { copyReferencesBtn.textContent = "Copy References"; }, 1500);
-    } catch (err) {
-      setError("Clipboard unavailable. Select and copy the references manually.");
+      const result = await api("/api/paypal/payment/" + encodeURIComponent(id) + "/audit");
+      if (!result.ok) {
+        els.auditTrailState.innerHTML = chip(result.status === 401 ? "Unauthorized" : "Unavailable", "fail");
+        els.auditTrailSub.textContent = "Audit trail could not be loaded.";
+        els.auditTrail.innerHTML = '<div class="banner danger"><div>' + esc(errorMessage(result, "Audit trail unavailable.")) + "</div></div>";
+        toast("Audit trail could not be loaded.", "fail");
+        return;
+      }
+      const events = Array.isArray(result.data.audit) ? result.data.audit : [];
+      els.auditTrailState.innerHTML = recordStatusChip(result.data);
+      els.auditTrailSub.textContent = events.length + (events.length === 1 ? " event" : " events") + " for " + shortId(id, 28) + ". Append-only; never edited by this interface.";
+      els.auditTrail.innerHTML = events.length === 0
+        ? emptyState("No audit events recorded", "The server returned an empty audit trail for this payment.")
+        : auditTimelineHTML(events);
+    } catch {
+      els.auditTrailState.innerHTML = chip("Unavailable", "fail");
+      els.auditTrail.innerHTML = '<div class="banner danger"><div>The audit request failed unexpectedly.</div></div>';
+      toast("Audit request failed unexpectedly.", "fail");
+    } finally {
+      els.loadAuditBtn.disabled = false;
+      els.loadAuditBtn.textContent = "Load audit trail";
     }
-  });
+  }
 
-  fetch("/health", { credentials: "same-origin" })
-    .then((response) => response.json())
-    .then((data) => {
-      setProviderMode(data.providerMode, data.simulated);
-      setOperatorAuth(data.authMode, data.operatorAuthRequired);
-    })
-    .catch(() => { providerBadge.textContent = "PayPal mode: unavailable"; });
+  function monadDetail(label, value, extraKind) {
+    return '<div class="detail"><dt>' + esc(label) + "</dt><dd>" + (extraKind ? chip(value, extraKind) : esc(value)) + "</dd></div>";
+  }
 
-  showStage(1);
-})();
+  function renderMonadResult(httpOk, payload) {
+    const data = payload || {};
+    const preview = data.preview;
+    const bannerText = typeof data.banner === "string" && data.banner ? data.banner : (data.error || (httpOk ? "Preview complete." : "Preview failed."));
+    const success = httpOk && preview && preview.ok === true;
+    els.monadResultBanner.className = "banner " + (success ? "info" : "danger");
+    els.monadStatus.textContent = bannerText;
+    els.monadResult.textContent = JSON.stringify(data, null, 2);
+    if (!preview) {
+      els.monadSummary.innerHTML = '<div class="banner danger"><div>' + esc(data.error || "The preview did not return a result.") + "</div></div>";
+      return;
+    }
+    if (preview.ok !== true) {
+      const reasons = Array.isArray(preview.reasons) ? preview.reasons : [];
+      els.monadSummary.innerHTML = '<div class="banner danger"><div><strong>Preflight checks did not pass.</strong> Informational only; nothing was broadcast.</div></div>' +
+        (reasons.length > 0 ? '<ul class="list fail mt-18">' + reasons.map((reason) => "<li><span><strong>" + esc(reason.code || "REASON") + "</strong> — " + esc(reason.message || "") + "</span></li>").join("") + "</ul>" : "");
+      return;
+    }
+    const approval = preview.approval || {};
+    const chain = preview.chain || {};
+    els.monadSummary.innerHTML =
+      '<div class="hero-actions" style="margin:0 0 14px">' +
+      chip(preview.network || "Monad Testnet", "info") +
+      chip("chain " + (preview.chainId || "—"), "neutral") +
+      (approval.verified ? chip("APPROVAL VERIFIED", "success") : chip("APPROVAL NOT VERIFIED", "pending")) +
+      (preview.affordable ? chip("BALANCE SUFFICIENT", "success") : chip("BALANCE INSUFFICIENT", "fail")) +
+      "</div>" +
+      '<dl class="detail-grid">' +
+      monadDetail("Asset", preview.asset || "MON") +
+      monadDetail("Amount", (preview.amountMonDisplay || "—") + " MON") +
+      monadDetail("Sender", preview.sender || "—") +
+      monadDetail("Recipient", preview.recipient || "—") +
+      monadDetail("Policy version", preview.policyVersion || "—") +
+      monadDetail("Request ID", preview.requestId || "—") +
+      monadDetail("Nonce", preview.nonce || "—") +
+      monadDetail("Sender nonce", String(chain.senderNonce !== undefined ? chain.senderNonce : "—")) +
+      monadDetail("Sender balance (wei)", chain.senderBalanceWei || "—") +
+      monadDetail("Gas estimate", chain.gasEstimate || "—") +
+      monadDetail("Max fee per gas (wei)", chain.maxFeePerGasWei || "—") +
+      monadDetail("Max priority fee (wei)", chain.maxPriorityFeePerGasWei || "—") +
+      monadDetail("Approver", approval.approver || "—") +
+      monadDetail("Fee check", preview.feeCheck || "No fee issue reported", preview.feeCheck ? "pending" : "success") +
+      '<div class="detail full"><dt>Policy digest</dt><dd class="mono">' + esc(preview.policyDigest || "—") + "</dd></div>" +
+      "</dl>" +
+      '<p class="hint" style="margin-top:14px">This result is informational readiness only — not authorization to execute — and no transaction was broadcast.</p>';
+  }
 
-// Existing read-only Monad preview form.
-(function () {
-  "use strict";
-  const form = document.getElementById("preview-form");
-  const status = document.getElementById("status");
-  const result = document.getElementById("result");
-  form.addEventListener("submit", async (event) => {
+  async function handlePreview(event) {
     event.preventDefault();
-    status.textContent = "Running read-only preview…";
-    result.textContent = "—";
-    const amountMon = document.getElementById("amount").value.trim();
-    const requestId = document.getElementById("requestId").value.trim();
-    const proofRaw = document.getElementById("proof").value.trim();
+    const amountMon = String(byId("amount").value || "").trim();
+    const requestId = String(byId("requestId").value || "").trim();
+    const proofRaw = String(byId("proof").value || "").trim();
     const payload = { amountMon };
     if (requestId) payload.requestId = requestId;
     if (proofRaw) {
-      try { payload.proof = JSON.parse(proofRaw); }
-      catch (e) {
-        status.textContent = "Proof must be valid JSON.";
+      try {
+        payload.proof = JSON.parse(proofRaw);
+      } catch {
+        els.monadResultBanner.className = "banner danger";
+        els.monadStatus.textContent = "Approval proof must be valid JSON.";
+        els.monadSummary.innerHTML = "";
         return;
       }
     }
+    els.monadStatus.textContent = "Running read-only preflight…";
+    els.monadResultBanner.className = "banner info";
+    els.monadSummary.innerHTML = '<p class="hint">Checking policy, approval, network, fees, and balance. No transaction is signed or broadcast.</p>';
+    els.monadResult.textContent = "—";
     try {
       const response = await fetch("/api/preview", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
-      const data = await response.json();
-      status.textContent = data.banner || (response.ok ? "Preview complete." : "Preview failed.");
-      result.textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-      status.textContent = "Preview request failed.";
-      result.textContent = err instanceof Error ? err.message : "request failed";
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+      renderMonadResult(response.ok, data);
+    } catch {
+      els.monadResultBanner.className = "banner danger";
+      els.monadStatus.textContent = "The preview request failed. Check the connection and try again.";
+      els.monadSummary.innerHTML = "";
+      els.monadResult.textContent = "—";
     }
-  });
+  }
+
+  async function handleClearSession() {
+    if (state.payments.length === 0) return;
+    const confirmed = await confirmAction({
+      title: "Clear session history",
+      subtitle: "This only clears records held in this browser tab.",
+      bodyHTML: '<div class="banner warn"><div>This removes the session-only list from the interface. It does not delete server records, and it does not affect any payment already created. Server-side state and audit trails remain intact.</div></div>',
+      confirmLabel: "Clear session list",
+      kind: "danger"
+    });
+    if (!confirmed) return;
+    state.payments = [];
+    renderOverview();
+    renderTransactions();
+    toast("Session list cleared. Server records were not deleted.", "info");
+  }
+
+  function openAuditFor(id) {
+    navigate("audit");
+    els.auditPaymentId.value = id;
+    if (state.payments.some((item) => paymentIdOf(item) === id)) els.auditSelect.value = id;
+    loadAuditTrail(id);
+  }
+
+  function wireEvents() {
+    document.addEventListener("click", (event) => {
+      const goto = event.target.closest("[data-goto]");
+      if (goto) {
+        navigate(goto.getAttribute("data-goto"));
+        return;
+      }
+      const example = event.target.closest("[data-example]");
+      if (example) {
+        els.instruction.value = example.getAttribute("data-example") || "";
+        els.instruction.focus();
+      }
+    });
+
+    els.sidebarToggle.addEventListener("click", () => {
+      const mobile = window.matchMedia("(max-width: 1024px)").matches;
+      if (mobile) {
+        const open = els.app.classList.toggle("mobile-open");
+        els.sidebarToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      } else {
+        const collapsed = els.app.classList.toggle("sidebar-collapsed");
+        els.sidebarToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      }
+      updateSidebarA11y();
+    });
+
+    els.mobileOverlay.addEventListener("click", () => {
+      els.app.classList.remove("mobile-open");
+      els.sidebarToggle.setAttribute("aria-expanded", "false");
+      updateSidebarA11y();
+    });
+
+    window.addEventListener("resize", () => {
+      if (!window.matchMedia("(max-width: 1024px)").matches) {
+        els.app.classList.remove("mobile-open");
+        els.sidebarToggle.setAttribute("aria-expanded", els.app.classList.contains("sidebar-collapsed") ? "false" : "true");
+      }
+      updateSidebarA11y();
+    });
+
+    els.token.addEventListener("input", renderTokenStatus);
+    els.analyzeBtn.addEventListener("click", handleAnalyze);
+    els.createOrderBtn.addEventListener("click", handleCreateOrder);
+    els.openApprovalBtn.addEventListener("click", handleOpenApproval);
+    els.verifyApprovalBtn.addEventListener("click", handleVerifyApproval);
+    els.captureBtn.addEventListener("click", handleCapture);
+    els.refreshStatusBtn.addEventListener("click", handleRefreshCurrent);
+    els.resetPaymentBtn.addEventListener("click", resetPaymentFlow);
+    els.clearSessionBtn.addEventListener("click", handleClearSession);
+
+    [els.txTbody, els.transactionsCards].forEach((container) => {
+      container.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action]");
+        if (!button) return;
+        const id = button.getAttribute("data-id") || "";
+        const action = button.getAttribute("data-action");
+        if (action === "detail") showPaymentDetail(id);
+        else if (action === "audit") openAuditFor(id);
+      });
+    });
+
+    els.auditSelect.addEventListener("change", () => {
+      els.auditPaymentId.value = els.auditSelect.value;
+    });
+    els.auditPaymentId.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        loadAuditTrail();
+      }
+    });
+    els.loadAuditBtn.addEventListener("click", () => loadAuditTrail());
+
+    els.modalBody.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-modal-refresh]");
+      if (!button) return;
+      const id = button.getAttribute("data-modal-refresh") || "";
+      button.disabled = true;
+      button.textContent = "Refreshing…";
+      const updated = await refreshPayment(id);
+      const record = updated || state.payments.find((item) => paymentIdOf(item) === id);
+      els.modalBody.innerHTML = detailHTML(record);
+    });
+
+    els.previewForm.addEventListener("submit", handlePreview);
+  }
+
+  function init() {
+    if (window.matchMedia("(max-width: 1024px)").matches) els.sidebarToggle.setAttribute("aria-expanded", "false");
+    updateSidebarA11y();
+    renderAiEmpty();
+    renderPolicyEmpty();
+    renderSummary();
+    renderFlow();
+    renderApprovalPanel();
+    renderExecutionPanel();
+    renderTokenStatus();
+    renderOverview();
+    renderTransactions();
+    wireEvents();
+    loadHealth();
+    navigate("overview");
+  }
+
+  init();
 })();
 </script>
 </body>
